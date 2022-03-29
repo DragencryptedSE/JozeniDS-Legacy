@@ -16,7 +16,7 @@ General unique purposes:
 # Instructions
 For setting up player data.
 
-1. Insert a folder named "PresetPlayerData" in ServerStorage. Insert as many objects as prefered under the folder, set their attributes and go crazy with it. During gameplay, this folder will be renamed to the "Scope" you set in the script. By default, the folder is renamed to "PlayerData" because it is the name of the DataStore's scope, so use `ServerStorage:WaitForChild("PlayerData")` in scripts. For the player's data, use `Player:WaitForChild("PlayerData")`.
+1. Insert a folder named "PresetPlayerData" in ServerStorage. Insert as many objects as prefered under the folder (see limitations), set their attributes and go crazy with it. During gameplay, this folder will be renamed to the "Scope" you set in the script. By default, the folder is renamed to "PlayerData" because it is the name of the DataStore's scope, so use `ServerStorage:WaitForChild("PlayerData")` in scripts. For the player's data, use `Player:WaitForChild("PlayerData")`.
 2. To live test DataStores, be sure to enable Studio API Services.
 3. Change up the player's PlayerData in-game, then rejoin to see if it saved.
 

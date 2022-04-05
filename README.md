@@ -5,7 +5,7 @@ Data serializer created using Roblox Studio. The goal is to save everything unde
 - Object attributes.
 - All insertable objects from Roblox Studio's Insert Object widget. Everything, including scripts and meshparts, not kidding.
 - Ability to manipulate data with ease, especially if using a DataStore editor plugin.
-- Auto saving.
+- Auto saving support, but is not recommended because DataStore throttling.
 - Offline data testing supported.
 
 # Use case examples

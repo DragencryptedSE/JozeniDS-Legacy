@@ -94,7 +94,7 @@ local function propTable(prop)
 			local props = {}
 			for i, v in pairs(prop) do
 				if type(v) == "string" then
-					table.insert(props, Enum.NormalId[v])	
+					table.insert(props, Enum.NormalId[v])
 				end
 			end
 			Data = Axes.new(table.unpack(props))
@@ -102,7 +102,7 @@ local function propTable(prop)
 			local props = {}
 			for i, v in pairs(prop) do
 				if type(v) == "string" then
-					table.insert(props, Enum.NormalId[v])	
+					table.insert(props, Enum.NormalId[v])
 				end
 			end
 			Data = Faces.new(table.unpack(props))
@@ -128,7 +128,7 @@ local function setReference(newObj, parent, info, prop)
 		--split the location
 		local splitLocations = info.Location:split(".")
 		local lastParent = nil
-		
+
 		local startPos = 1
 		local foundPos = false
 
@@ -776,7 +776,7 @@ function DataSettings:Load(Player, DataTable, fileName)
 												newObj.Value = propTable(info.Value)
 											elseif newObj:IsA("ObjectValue") then
 												if info.Value then
-													scanObjects(newObj, info.Value, nil, true)	
+													scanObjects(newObj, info.Value, nil, true)
 												end
 												--print(newObj.Name .. " is a ValueBase.")
 											else
@@ -1046,6 +1046,23 @@ function DataSettings:Load(Player, DataTable, fileName)
 												newObj.ZIndex = info.ZIndex
 												if newObj:IsA("Frame") then
 													newObj.Style = Enum.FrameStyle[info.Style]
+												elseif newObj:IsA("ScrollingFrame") then
+													newObj.AutomaticCanvasSize = Enum.AutomaticSize[info.AutomaticCanvasSize]
+													newObj.BottomImage = Object.BottomImage
+													newObj.CanvasPosition = propTable(Object.CanvasPosition)
+													newObj.CanvasSize = propTable(Object.CanvasSize)
+													newObj.ElasticBehavior = Enum.ElasticBehavior[info.ElasticBehavior]
+													newObj.HorizontalScrollBarInset = Enum.ScrollBarInset[info.HorizontalScrollBarInset]
+													newObj.MidImage = Object.MidImage
+													newObj.ScrollBarImageColor3 = propTable(Object.ScrollBarImageColor3)
+													newObj.ScrollBarImageTransparency = Object.ScrollBarImageTransparency
+													newObj.ScrollBarThickness = Object.ScrollBarThickness
+													newObj.ScrollVelocity = propTable(Object.ScrollVelocity)
+													newObj.ScrollingDirection = Enum.ScrollingDirection[info.ScrollingDirection]
+													newObj.ScrollingEnabled = Object.ScrollingEnabled
+													newObj.TopImage = Object.TopImage
+													newObj.VerticalScrollBarInset = Enum.ScrollBarInset[info.VerticalScrollBarInset]
+													newObj.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition[info.VerticalScrollBarPosition]
 												elseif newObj:IsA("TextLabel") or newObj:IsA("TextButton") then
 													newObj.Font = Enum.Font[info.Font]
 													newObj.LineHeight = info.LineHeight

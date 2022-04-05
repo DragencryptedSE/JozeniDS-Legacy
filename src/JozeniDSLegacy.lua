@@ -3,35 +3,34 @@ print("Jozeni00\'s DataStore Legacy loaded.")
 local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
-	["Name"] = "JozeniDS_TestLV1"; --DataStore name for the entire game.
+	["Name"] = "JozeniDS_TestLV0-0-0"; --DataStore name for the entire game.
 	["Scope"] = "PlayerData"; --Player's DataStore folder name (a folder with this name will appear under each Player).
 	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
-	
+
 	--[FEATURES]--
-	["AutoSave"] = true; --set to true to enable auto saving.
+	["AutoSave"] = false; --set to true to enable auto saving, however players may experience data loss due to throttling.
 	["SaveTime"] = 1; --time (in minutes) how often it should automatically save.
 }
 
 --[[
-	[LAST UPDATED]: 29 March 2022
-	
+	[LAST UPDATED]: 04 April 2022
+
 	I appreciate you for using Jozeni00's DataStore script!
-	
+
 	Difference between Legacy and 2.0 versions:
-	[Legacy]: Offers better workflow compared to 2.0, when Studio API Services are enabled.
-		However, PresetPlayerData saving is strict.
+	[Legacy]: Saving is strict, object names are required to be unique.
 		- Good for most common needs.
 		- Can only save values and folders (with the exception of ObjectValue, can save any object class).
-		- No longer being updatd. (Last Updated: 29 March 2022)
-		- Updating PresetPlayerData will update old and new saves.
-	
-	[2.0]: Bad workflow compared to Legacy, when Studio API Services are enabled.
-		However, PresetPlayerData has no saving restrictions.
+		- No longer being updated. (Last Updated: 04 April 2022)
+		- Updating PresetPlayerData will not require you to use the command bar.
+
+	[2.0]: Successor to Legacy version.
+		- Unrestricted saving.
 		- Can save any object class under PresetPlayerData.
-		- It is recommended to keep Studio API Services disabled for better workflow.
 		- Aimed towards hardcore RPG/Adventure games.
-		- Updating PresetPlayerData will not update old saves, but will for new saves.
-	
+		- Updating PresetPlayerData will require you to use the command bar afterwards.
+			- (Blame Roblox for disallowing developers readable access to object unique identifiers.)
+
 	[Instructions]
 	Studio API Services are no longer required for this script to operate.
 	Enable Studio API services to grant Roblox Studio access to DataStore services. (Optional)
@@ -48,7 +47,7 @@ local DataSettings = {
 			- Deprecated objects are not supported, but there may still be some that do fully save.
 				For example, Accessories and Hats (deprecated) are both Accoutrements, meaning
 					they share mostly the same properties.
-					
+
 			- Allowed instances to be placed under PresetPlayerData (and real PlayerData):
 				- Folder
 				- IntValue
@@ -61,24 +60,24 @@ local DataSettings = {
 				- Color3Value
 				- BrickColorValue
 				- ObjectValue
-			
+
 		- Insert "DataTempFile" folder in ReplicatedStorage. (optional)
 			- `ObjectValue.Value` saves are automatically placed under this file.
-			- It is recommended to use unique naming schemes for objects that use a reference to 
+			- It is recommended to use unique naming schemes for objects that use a reference to
 				another object for the best results.
-			
+
 	2. A folder named, from DataSettings["Scope"] will appear under all Players.
 		- The Player's data folder can always be edited from Server Scripts and Server-sided test play.
 		- Any changes made under PlayerData will always save.
 		- Changes made from a LocalScript or Client side will never save.
-	
+
 	4. To link data across all Places of this game, this Script and PresetPlayerData must be present
 		in each Place.
-	
+
 	5. The DataStore's "Name" and "Scope" will appear in the output when the game closes after test-play.
 		- The "Key" will also appear in the output when a player leaves the game.
 		- A Player's ObjectValues will clean up while leaving.
-	
+
 	{PRO TIP}
 	How to link DataStore across all Places:
 	[Setting up a package link]
@@ -86,35 +85,35 @@ local DataSettings = {
 	- After, a link object should appear under the same script you converted to package.
 	- In the link's properties, enable "AutoUpdate".
 	- You may now copy this script object and paste it into all of the other Places within this game.
-	
+
 	[Usage basics]
 	- Let's say you changed DataSettings["Name"] from "JozeniDS_V1.5" to "JozeniDS_V1.6", and applied changes.
 	- Once done, right-click this script object and update package.
 	- The change only applies within this place.
 	- To update the other scripts with the same package link, you would have to go re-publish or re-save each Place
 		via File --> Save (or Publish) for the changes to take affect per Place containing the updated DataStore script.
-	
+
 	How to convert a Union to a MeshPart:
 	1. Right-click union, select "Export selection..."
 	2. In Studio, click "VIEW" tab (at top screen), and enable "Asset Manager".
 	3. In Asset Manager window, click the "upload" icon (appears like `[->`, but facing upwards).
 	4. When it makes you select a file, select the `.obj` file to upload it.
 	5. A new Mesh should appear in "Meshes" of Asset Manager.
-	
-	Referencing PlayerData Example: 
+
+	Referencing PlayerData Example:
 	(from a server Script)
 	-----------------------------------------------------------------
-		--New Data: 
+		--New Data:
 		local PlayerData = Player:WaitForChild("PlayerData")
 		local SavedData = PlayerData:FindFirstChild("SavedData")
 		local Gold = SavedData:FindFirstChild("Gold")
 		Gold.Value = 2600
-		
+
 		--Player on leaving... New Data has been saved.
 	-----------------------------------------------------------------
 	- "Instance:WaitForChild()" should be used sparingly in server Scripts because it adds actual "wait(default number)".
 	- Emergency case example would be if an object's descendants count is too large.
-	
+
 	[Conclusion]
 	"This is as efficient as it gets." -EthanTano (February 2022)
 ]]
@@ -175,7 +174,7 @@ local function onPlayerEntered(Player)
 			Player:Kick("Internal server error, please rejoin.")
 		end
 	end
-	
+
 	if DataSettings.AutoSave then
 		local isInGame = true
 		local plrRemove = nil
@@ -230,7 +229,7 @@ local function onPlayerRemoving(Player)
 	local PlayerData = Player:FindFirstChild(fileName)
 	if PlayerData then
 		--update
-		local serialize = saveModule:CompileDataTable(PlayerData) 
+		local serialize = saveModule:CompileDataTable(PlayerData)
 		local dataCache = HttpService:JSONEncode(serialize)
 		local success, result = pcall(function()
 			PlayerDataStore:UpdateAsync(PlayerKey, function(oldValue)

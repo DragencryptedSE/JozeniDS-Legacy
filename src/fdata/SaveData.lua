@@ -1111,6 +1111,23 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["ZIndex"] = Object.ZIndex
 						if Object:IsA("Frame") then
 							Data[holdName]["Style"] = Object.Style.Name
+						elseif Object:IsA("ScrollingFrame") then
+							Data[holdName]["AutomaticCanvasSize"] = Object.AutomaticCanvasSize.Name
+							Data[holdName]["BottomImage"] = Object.BottomImage
+							Data[holdName]["CanvasPosition"] = getProp(Object.CanvasPosition)
+							Data[holdName]["CanvasSize"] = getProp(Object.CanvasSize)
+							Data[holdName]["ElasticBehavior"] = Object.ElasticBehavior.Name
+							Data[holdName]["HorizontalScrollBarInset"] = Object.HorizontalScrollBarInset.Name
+							Data[holdName]["MidImage"] = Object.MidImage
+							Data[holdName]["ScrollBarImageColor3"] = getProp(Object.ScrollBarImageColor3)
+							Data[holdName]["ScrollBarImageTransparency"] = Object.ScrollBarImageTransparency
+							Data[holdName]["ScrollBarThickness"] = Object.ScrollBarThickness
+							Data[holdName]["ScrollVelocity"] = getProp(Object.ScrollVelocity)
+							Data[holdName]["ScrollingDirection"] = Object.ScrollingDirection.Name
+							Data[holdName]["ScrollingEnabled"] = Object.ScrollingEnabled
+							Data[holdName]["TopImage"] = Object.TopImage
+							Data[holdName]["VerticalScrollBarInset"] = Object.VerticalScrollBarInset.Name
+							Data[holdName]["VerticalScrollBarPosition"] = Object.VerticalScrollBarPosition.Name
 						elseif Object:IsA("TextLabel") or Object:IsA("TextButton") then
 							Data[holdName]["Font"] = Object.Font.Name
 							Data[holdName]["LineHeight"] = Object.LineHeight
@@ -1331,7 +1348,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["MaxTextSize"] = Object.MaxTextSize
 					Data[holdName]["MinTextSize"] = Object.MinTextSize
 				end
-				
+
 				local children = Object:GetChildren()
 				if #children > 0 then
 					Data[holdName]["Children"] = {}

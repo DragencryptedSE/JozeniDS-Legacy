@@ -1286,6 +1286,9 @@ function DataSettings:Load(Player, DataTable, fileName)
 								end
 								if firstPart then
 									firstPart.Parent = TempFile
+									if OBJ.Value and OBJ.Value ~= firstPart then
+										OBJ.Value:Destroy()
+									end
 									OBJ.Value = firstPart
 									--print(OBJ.Value, firstPart)
 								end

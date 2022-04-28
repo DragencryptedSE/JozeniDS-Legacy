@@ -7,13 +7,19 @@ local DataSettings = {
 	["Scope"] = "PlayerData"; --Player's DataStore folder name (a folder with this name will appear under each Player).
 	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
-	--[FEATURES]--
+	--{FEATURES}--
+	["FolderName"] = "PlayerData"; --Name of the folder that will appear under the Player.
+	["LoadedName"] = "DataStoreLoaded"; --Name of attribute when the player successfully loads DataStore.
+
 	["AutoSave"] = false; --set to true to enable auto saving, however players may experience data loss due to throttling.
 	["SaveTime"] = 1; --time (in minutes) how often it should automatically save.
+
+	["UseStudioScope"] = true; --set to true to use a different Scope for Studio only.
+	["DevScope"] = "dev"; --Scope of the datastore for Studio, if UseStudioScope is true.
 }
 
 --[[
-	[LAST UPDATED]: 04 April 2022
+	[LAST UPDATED]: 28 April 2022
 
 	I appreciate you for using Jozeni00's DataStore script!
 
@@ -101,13 +107,17 @@ local DataSettings = {
 	5. A new Mesh should appear in "Meshes" of Asset Manager.
 
 	Referencing PlayerData Example:
-	(from a server Script)
 	-----------------------------------------------------------------
+		-- wait for datastore to load
+		if not Player:GetAttribute("DataStoreLoaded") then
+			Player:GetAttributeChangedSignal("DataStoreLoaded"):Wait() -- returns datastore folder name, "PlayerData"
+		end
+
 		--New Data:
-		local PlayerData = Player:WaitForChild("PlayerData")
+		local PlayerData = Player:FindFirstChild(Player:GetAttribute("DataStoreLoaded"))
 		local SavedData = PlayerData:FindFirstChild("SavedData")
 		local Gold = SavedData:FindFirstChild("Gold")
-		Gold.Value = 2600
+		Gold.Value = 2600 --changing data from a LocalScript will not save because it is not Server-Sided.
 
 		--Player on leaving... New Data has been saved.
 	-----------------------------------------------------------------
@@ -122,7 +132,9 @@ local DataSettings = {
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local Debris = game:GetService("Debris")
-local fileName = DataSettings.Scope
+local RunService = game:GetService("RunService")
+
+local fileName = DataSettings.FolderName
 local msSave = script:FindFirstChild("SaveData")
 local msLoad = script:FindFirstChild("LoadData")
 
@@ -142,8 +154,17 @@ end
 
 --data
 local DataStoreService = game:GetService("DataStoreService")
-local DataKey = DataSettings.Name
-local PlayerDataStore = DataStoreService:GetDataStore(DataKey, fileName)
+local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
+
+--set scope
+if DataSettings.UseStudioScope then
+	if RunService:IsStudio() then
+		DataSettings.Scope = DataSettings.DevScope
+	end
+end
+if DataSettings.Scope == "" then
+	DataSettings.Scope = "global"
+end
 
 --player entered
 local function onPlayerEntered(Player)
@@ -162,6 +183,7 @@ local function onPlayerEntered(Player)
 	end)
 	if success then
 		local PlayerData = loadModule:Load(Player, result, fileName)
+		Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
 		print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
 	else
 		warn(result)
@@ -169,6 +191,8 @@ local function onPlayerEntered(Player)
 			local PlayerData = PresetPlayerData:Clone()
 			PlayerData.Name = fileName
 			PlayerData.Parent = Player
+
+			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
 			print(Player.UserId .. " | " .. Player.Name .. " loaded in without DataStore access.")
 		else
 			Player:Kick("Internal server error, please rejoin.")
@@ -196,7 +220,7 @@ local function onPlayerEntered(Player)
 			local success, result = pcall(function()
 				PlayerDataStore:UpdateAsync(PlayerKey, function(oldValue)
 					local newValue = serialize or oldValue
-					return newValue
+					return newValue, {Player.UserId}
 				end)
 			end)
 
@@ -234,7 +258,7 @@ local function onPlayerRemoving(Player)
 		local success, result = pcall(function()
 			PlayerDataStore:UpdateAsync(PlayerKey, function(oldValue)
 				local newValue = serialize or oldValue
-				return newValue
+				return newValue, {Player.UserId}
 			end)
 		end)
 		if success then
@@ -254,7 +278,7 @@ local function onPlayerRemoving(Player)
 		for i, v in pairs(PlayerData:GetDescendants()) do
 			if v:IsA("ObjectValue") then
 				if v.Value then
-					Debris:AddItem(v, 5)
+					Debris:AddItem(v.Value, 4)
 				end
 			else
 				continue
@@ -284,7 +308,7 @@ game:BindToClose(function()
 		v:Kick()
 	end
 	task.wait(3)
-	print("Name: " .. DataKey)
-	print("Scope: " .. fileName)
+	print("Name: " .. DataSettings.Name)
+	print("Scope: " .. DataSettings.Scope)
 end)
 --[Made by Jozeni00]--

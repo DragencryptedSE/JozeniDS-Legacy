@@ -219,7 +219,8 @@ function DataSettings:Load(Player, DataTable, fileName)
 		local function Scan(Object, Data)
 			if type(Data) == "table" then
 				for i, v in pairs(Data) do
-					if Object:FindFirstChild(i) == nil then
+					local dataObject = Object:FindFirstChild(i)
+					if not dataObject then
 						local kindtomake = nil
 						if type(v) == "table" then
 							if v.ClassName then
@@ -235,24 +236,28 @@ function DataSettings:Load(Player, DataTable, fileName)
 							local ob = Instance.new(kindtomake)
 							ob.Name = i
 							ob.Parent = Object
+							dataObject = ob
+						end
+						if not dataObject then
+							warn("Error during load-scan, data " .. i .. " is", dataObject)
 						end
 					end
-					if Object[i]:IsA("IntValue") or Object[i]:IsA("BoolValue") or Object[i]:IsA("NumberValue") or (Object[i]:IsA("StringValue") and type(v.Value) == "string") then
-						Object[i].Value = v.Value
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("RayValue") then
-						Object[i].Value = Ray.new(Vector3.new(v.x, v.y, v.z), Vector3.new(v.dx, v.dy, v.dz))
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("Color3Value") then
-						Object[i].Value = Color3.new(v.R, v.G, v.B)
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("Vector3Value") then
-						Object[i].Value = Vector3.new(v.X, v.Y, v.Z)
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("CFrameValue") then
-						Object[i].Value = CFrame.new(v.x, v.y, v.z, v.R00, v.R01, v.R02, v.R10, v.R11, v.R12, v.R20, v.R21, v.R22)
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("ObjectValue") then
+					if dataObject:IsA("IntValue") or dataObject:IsA("BoolValue") or dataObject:IsA("NumberValue") or dataObject:IsA("StringValue") then
+						dataObject.Value = v.Value
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("RayValue") then
+						dataObject.Value = Ray.new(Vector3.new(v.x, v.y, v.z), Vector3.new(v.dx, v.dy, v.dz))
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("Color3Value") then
+						dataObject.Value = Color3.new(v.R, v.G, v.B)
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("Vector3Value") then
+						dataObject.Value = Vector3.new(v.X, v.Y, v.Z)
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("CFrameValue") then
+						dataObject.Value = CFrame.new(v.x, v.y, v.z, v.R00, v.R01, v.R02, v.R10, v.R11, v.R12, v.R20, v.R21, v.R22)
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("ObjectValue") then
 						local function scanObjects(OBJ, VAL)
 							if VAL and VAL.Value then
 								local objects = HttpService:JSONDecode(VAL.Value)
@@ -1294,13 +1299,13 @@ function DataSettings:Load(Player, DataTable, fileName)
 								end
 							end
 						end
-						scanObjects(Object[i], v)
-						setAttributes(Object[i], v)
-					elseif Object[i]:IsA("BrickColorValue") then
-						Object[i].Value = BrickColor.new(v.r, v.g, v.b)
-						setAttributes(Object[i], v)
+						scanObjects(dataObject, v)
+						setAttributes(dataObject, v)
+					elseif dataObject:IsA("BrickColorValue") then
+						dataObject.Value = BrickColor.new(v.r, v.g, v.b)
+						setAttributes(dataObject, v)
 					else
-						Scan(Object[i], v)
+						Scan(dataObject, v)
 					end
 				end
 			end

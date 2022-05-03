@@ -3,7 +3,7 @@ print("Jozeni00\'s DataStore Legacy loaded.")
 local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
-	["Name"] = "JozeniDS_TestLV0-0-0"; --DataStore name for the entire game.
+	["Name"] = "JozeniDS_TestLV0-0-0ab-1"; --DataStore name for the entire game.
 	["Scope"] = "PlayerData"; --Player's DataStore folder name (a folder with this name will appear under each Player).
 	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
@@ -152,10 +152,6 @@ if not PresetPlayerData then
 	PresetPlayerData.Parent = ServerStorage
 end
 
---data
-local DataStoreService = game:GetService("DataStoreService")
-local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
-
 --set scope
 if DataSettings.UseStudioScope then
 	if RunService:IsStudio() then
@@ -165,6 +161,10 @@ end
 if DataSettings.Scope == "" then
 	DataSettings.Scope = "global"
 end
+
+--data
+local DataStoreService = game:GetService("DataStoreService")
+local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
 
 --player entered
 local function onPlayerEntered(Player)

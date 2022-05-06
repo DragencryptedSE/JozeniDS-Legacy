@@ -3,8 +3,8 @@ print("Jozeni00\'s DataStore Legacy loaded.")
 local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
-	["Name"] = "JozeniDS_TestLV0-0-0ab-1"; --DataStore name for the entire game.
-	["Scope"] = "PlayerData"; --Player's DataStore folder name (a folder with this name will appear under each Player).
+	["Name"] = "JozeniDS_TestLV0-0-0"; --DataStore name for the entire game.
+	["Scope"] = "PlayerData"; --The scope of the datastore for a live game.
 	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
 	--{FEATURES}--
@@ -19,7 +19,7 @@ local DataSettings = {
 }
 
 --[[
-	[LAST UPDATED]: 28 April 2022
+	[LAST UPDATED]: 03 May 2022
 
 	I appreciate you for using Jozeni00's DataStore script!
 
@@ -142,6 +142,14 @@ local saveModule = require(msSave)
 local loadModule = require(msLoad)
 
 --main code
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TempFile = ReplicatedStorage:FindFirstChild("DataTempFile")
+if not TempFile then
+	TempFile = Instance.new("Folder")
+	TempFile.Name = "DataTempFile"
+	TempFile.Parent = ReplicatedStorage
+end
+
 --storage
 local ServerStorage = game:GetService("ServerStorage")
 local PresetPlayerData = ServerStorage:FindFirstChild("PresetPlayerData")
@@ -164,32 +172,71 @@ end
 
 --data
 local DataStoreService = game:GetService("DataStoreService")
-local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
+local success, DataStoreResult = pcall(function()
+	local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
+	return PlayerDataStore
+end)
+if not success then
+	warn(DataStoreResult)
+end
 
 --player entered
 local function onPlayerEntered(Player)
 	local PlayerKey = DataSettings.Key .. Player.UserId
 	--load data
 	local success, result = pcall(function()
-		local DataTable = PlayerDataStore:GetAsync(PlayerKey)
-		if DataTable == nil then
-			print(Player.Name .. " is a new player, creating save...")
-			DataTable = saveModule:CompileDataTable(PresetPlayerData)
-			PlayerDataStore:SetAsync(PlayerKey, DataTable, {Player.UserId})
+		if type(DataStoreResult) == "string" then
+			return DataStoreResult
 		else
-			--print(DataTable)
+			local DataTable = DataStoreResult:GetAsync(PlayerKey)
+			if DataTable == nil then
+				print(Player.Name .. " is a new player, creating save...")
+				DataTable = saveModule:CompileDataTable(PresetPlayerData)
+				DataStoreResult:SetAsync(PlayerKey, DataTable, {Player.UserId})
+			else
+				--print(DataTable)
+			end
+			return DataTable
 		end
-		return DataTable
 	end)
 	if success then
-		local PlayerData = loadModule:Load(Player, result, fileName)
-		Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
-		print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
+		if type(DataStoreResult) == "string" then
+			local PlayerData = PresetPlayerData:Clone()
+			PlayerData.Name = fileName
+			--check for objs
+			for i, v in pairs(PlayerData:GetDescendants()) do
+				if v:IsA("ObjectValue") then
+					if v.Value then
+						local newObj = v.Value:Clone()
+						newObj.Parent = TempFile
+						v.Value = newObj
+					end
+				end
+			end
+
+			PlayerData.Parent = Player
+			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
+			print(Player.UserId .. " | " .. Player.Name .. " loaded in offline mode.")
+		else
+			local PlayerData = loadModule:Load(Player, result, fileName)
+			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
+			print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
+		end
 	else
 		warn(result)
 		if result:match("Studio access to APIs is not allowed.") then
 			local PlayerData = PresetPlayerData:Clone()
 			PlayerData.Name = fileName
+			--check for objs
+			for i, v in pairs(PlayerData:GetDescendants()) do
+				if v:IsA("ObjectValue") then
+					if v.Value then
+						local newObj = v.Value:Clone()
+						newObj.Parent = TempFile
+						v.Value = newObj
+					end
+				end
+			end
 			PlayerData.Parent = Player
 
 			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
@@ -199,7 +246,7 @@ local function onPlayerEntered(Player)
 		end
 	end
 
-	if DataSettings.AutoSave then
+	if DataSettings.AutoSave and type(DataStoreResult) ~= "string" then
 		local isInGame = true
 		local plrRemove = nil
 		if DataSettings.SaveTime < 1 then
@@ -218,7 +265,7 @@ local function onPlayerEntered(Player)
 			local serialize = saveModule:CompileDataTable(PlayerData)
 			local dataCache = HttpService:JSONEncode(serialize)
 			local success, result = pcall(function()
-				PlayerDataStore:UpdateAsync(PlayerKey, function(oldValue)
+				DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
 					local newValue = serialize or oldValue
 					return newValue, {Player.UserId}
 				end)
@@ -249,6 +296,10 @@ end
 
 --player removing
 local function onPlayerRemoving(Player)
+	if type(DataStoreResult) == "string" then
+		return
+	end
+
 	local PlayerKey = DataSettings.Key .. Player.UserId
 	local PlayerData = Player:FindFirstChild(fileName)
 	if PlayerData then
@@ -256,7 +307,7 @@ local function onPlayerRemoving(Player)
 		local serialize = saveModule:CompileDataTable(PlayerData)
 		local dataCache = HttpService:JSONEncode(serialize)
 		local success, result = pcall(function()
-			PlayerDataStore:UpdateAsync(PlayerKey, function(oldValue)
+			DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
 				local newValue = serialize or oldValue
 				return newValue, {Player.UserId}
 			end)

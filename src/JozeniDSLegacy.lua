@@ -183,15 +183,30 @@ end
 --player entered
 local function onPlayerEntered(Player)
 	local PlayerKey = DataSettings.Key .. Player.UserId
+
+	local PlayerData = PresetPlayerData:Clone()
+	PlayerData.Name = fileName
+	--check for objs
+	for i, v in pairs(PlayerData:GetDescendants()) do
+		if v:IsA("ObjectValue") then
+			if v.Value then
+				local newObj = v.Value:Clone()
+				newObj.Parent = TempFile
+				v.Value = newObj
+			end
+		end
+	end
+	PlayerData.Parent = Player
+
 	--load data
-	local success, result = pcall(function()
+	local success, DataResult = pcall(function()
 		if type(DataStoreResult) == "string" then
 			return DataStoreResult
 		else
 			local DataTable = DataStoreResult:GetAsync(PlayerKey)
 			if DataTable == nil then
 				print(Player.Name .. " is a new player, creating save...")
-				DataTable = saveModule:CompileDataTable(PresetPlayerData)
+				DataTable = saveModule:CompileDataTable(PlayerData)
 				DataStoreResult:SetAsync(PlayerKey, DataTable, {Player.UserId})
 			else
 				--print(DataTable)
@@ -199,52 +214,24 @@ local function onPlayerEntered(Player)
 			return DataTable
 		end
 	end)
+
 	if success then
 		if type(DataStoreResult) == "string" then
-			local PlayerData = PresetPlayerData:Clone()
-			PlayerData.Name = fileName
-			--check for objs
-			for i, v in pairs(PlayerData:GetDescendants()) do
-				if v:IsA("ObjectValue") then
-					if v.Value then
-						local newObj = v.Value:Clone()
-						newObj.Parent = TempFile
-						v.Value = newObj
-					end
-				end
-			end
-
-			PlayerData.Parent = Player
-			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
 			print(Player.UserId .. " | " .. Player.Name .. " loaded in offline mode.")
 		else
-			local PlayerData = loadModule:Load(Player, result, fileName)
-			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
+			loadModule:Load(Player, PlayerData, DataResult)
 			print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
 		end
 	else
-		warn(result)
-		if result:match("Studio access to APIs is not allowed.") then
-			local PlayerData = PresetPlayerData:Clone()
-			PlayerData.Name = fileName
-			--check for objs
-			for i, v in pairs(PlayerData:GetDescendants()) do
-				if v:IsA("ObjectValue") then
-					if v.Value then
-						local newObj = v.Value:Clone()
-						newObj.Parent = TempFile
-						v.Value = newObj
-					end
-				end
-			end
-			PlayerData.Parent = Player
-
-			Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
+		warn(DataResult)
+		if DataResult:match("Studio access to APIs is not allowed.") then
 			print(Player.UserId .. " | " .. Player.Name .. " loaded in without DataStore access.")
 		else
 			Player:Kick("Internal server error, please rejoin.")
 		end
 	end
+
+	Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
 
 	if DataSettings.AutoSave and type(DataStoreResult) ~= "string" then
 		local isInGame = true

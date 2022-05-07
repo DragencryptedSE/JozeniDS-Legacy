@@ -4,7 +4,7 @@ local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
 	["Name"] = "JozeniDS_TestLV0-0-0"; --DataStore name for the entire game.
-	["Scope"] = "PlayerData"; --The scope of the datastore for a live game.
+	["Scope"] = "plr"; --The scope of the datastore for a live game.
 	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
 	--{FEATURES}--

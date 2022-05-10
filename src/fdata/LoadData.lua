@@ -212,9 +212,7 @@ local function setReference(newObj, parent, info, prop)
 	end
 end
 
-function DataSettings:Load(Player, DataTable, fileName)
-	local DataFolder = ServerStorage:FindFirstChild("PresetPlayerData"):Clone() or Instance.new("Folder")
-	DataFolder.Name = fileName
+function DataSettings:Load(Player, DataFolder, DataTable)
 	if DataTable ~= nil then
 		local function Scan(Object, Data)
 			if type(Data) == "table" then

@@ -1,25 +1,27 @@
 --[Made by Jozeni00]--
-print("Jozeni00\'s DataStore Legacy loaded.")
+print("Jozeni00\'s Data Serializer Legacy loaded.")
 local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
-	["Name"] = "JozeniDS_TestLV0-0-0"; --DataStore name for the entire game.
-	["Scope"] = "plr"; --The scope of the datastore for a live game.
-	["Key"] = "Player_"; --prefix for key. Example: "Player_" is used for "Player_123456".
+	["Name"] = "DS_TestLV0-0-0"; --DataStore name for the entire game.
+	["Scope"] = ""; --The scope of the datastore for a live game. Roblox officially discourages the use of Scope.
+	["Key"] = "Plr_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
 	--{FEATURES}--
 	["FolderName"] = "PlayerData"; --Name of the folder that will appear under the Player.
 	["LoadedName"] = "DataStoreLoaded"; --Name of attribute when the player successfully loads DataStore.
 
-	["AutoSave"] = false; --set to true to enable auto saving, however players may experience data loss due to throttling.
+	["AutoSave"] = true; --set to true to enable auto saving.
 	["SaveTime"] = 1; --time (in minutes) how often it should automatically save.
 
 	["UseStudioScope"] = true; --set to true to use a different Scope for Studio only.
-	["DevScope"] = "dev"; --Scope of the datastore for Studio, if UseStudioScope is true.
+	["DevName"] = "DEV_DS_TestLV0-0-0"; --Name of the Data Store for Studio if UseStudioScope is true.
+	["DevScope"] = ""; --Scope of the Data Store for Studio, if UseStudioScope is true.
+	["DevKey"] = "Dev_"; --Key of the Data Store for Studio, if UseStudioScope is true.
 }
 
 --[[
-	[LAST UPDATED]: 03 May 2022
+	[LAST UPDATED]: 09 May 2022
 
 	I appreciate you for using Jozeni00's DataStore script!
 
@@ -27,7 +29,6 @@ local DataSettings = {
 	[Legacy]: Saving is strict, object names are required to be unique.
 		- Good for most common needs.
 		- Can only save values and folders (with the exception of ObjectValue, can save any object class).
-		- No longer being updated. (Last Updated: 04 April 2022)
 		- Updating PresetPlayerData will not require you to use the command bar.
 
 	[2.0]: Successor to Legacy version.
@@ -163,7 +164,9 @@ end
 --set scope
 if DataSettings.UseStudioScope then
 	if RunService:IsStudio() then
+		DataSettings.Name = DataSettings.DevName
 		DataSettings.Scope = DataSettings.DevScope
+		DataSettings.Key = DataSettings.DevKey
 	end
 end
 if DataSettings.Scope == "" then
@@ -178,6 +181,52 @@ local success, DataStoreResult = pcall(function()
 end)
 if not success then
 	warn(DataStoreResult)
+end
+
+--update function
+local function updateData(Player, PlayerKey, isAutoSave)
+	if type(DataStoreResult) ~= "string" and not Player:GetAttribute("IsSavingData") then
+		Player:SetAttribute("IsSavingData", true)
+		--player data
+		local PlayerData = Player:FindFirstChild(fileName)
+		local serialize = saveModule:CompileDataTable(PlayerData)
+		local dataCache = HttpService:JSONEncode(serialize)
+
+		--update
+		local maxRetries = 3
+		for i = 1, maxRetries do
+			local success, result = pcall(function()
+				DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
+					local newValue = serialize or oldValue
+					return newValue, {Player.UserId}
+				end)
+			end)
+
+			--results
+			if success then
+				if isAutoSave then
+					print(Player.Name .. " autosaved successfully.")
+				end
+				local maxCache = 4000000 --official limit is 4,000,000
+				print(Player.Name .. " saved: ")
+				print(PlayerData.Name, serialize)
+				if #dataCache <= maxCache then
+					print("Cache: " .. #dataCache .. " /" .. maxCache)
+				else
+					warn("Cache exceeds limit: " .. #dataCache .. " /" .. maxCache)
+				end
+				print("Key: " .. PlayerKey)
+				break
+			else
+				if i == maxRetries then
+					warn(result)
+				end
+			end
+			task.wait(2)
+		end
+
+		Player:SetAttribute("IsSavingData", false)
+	end
 end
 
 --player entered
@@ -199,36 +248,45 @@ local function onPlayerEntered(Player)
 	PlayerData.Parent = Player
 
 	--load data
-	local success, DataResult = pcall(function()
-		if type(DataStoreResult) == "string" then
-			return DataStoreResult
-		else
-			local DataTable = DataStoreResult:GetAsync(PlayerKey)
-			if DataTable == nil then
-				print(Player.Name .. " is a new player, creating save...")
-				DataTable = saveModule:CompileDataTable(PlayerData)
-				DataStoreResult:SetAsync(PlayerKey, DataTable, {Player.UserId})
+	local maxRetries = 3
+	for i = 1, maxRetries do
+		local success, DataResult = pcall(function()
+			if type(DataStoreResult) == "string" then
+				return DataStoreResult
 			else
-				--print(DataTable)
+				local DataTable = DataStoreResult:GetAsync(PlayerKey)
+				if DataTable == nil then
+					print(Player.Name .. " is a new player, creating save...")
+					DataTable = saveModule:CompileDataTable(PlayerData)
+					DataStoreResult:SetAsync(PlayerKey, DataTable, {Player.UserId})
+				else
+					--print(DataTable)
+				end
+				return DataTable
 			end
-			return DataTable
-		end
-	end)
+		end)
 
-	if success then
-		if type(DataStoreResult) == "string" then
-			print(Player.UserId .. " | " .. Player.Name .. " loaded in offline mode.")
+		if success then
+			if type(DataStoreResult) == "string" then
+				print(Player.UserId .. " | " .. Player.Name .. " loaded in offline mode.")
+			else
+				loadModule:Load(Player, PlayerData, DataResult)
+				print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
+			end
+			break
 		else
-			loadModule:Load(Player, PlayerData, DataResult)
-			print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
+			if DataResult:match("Studio access to APIs is not allowed.") then
+				warn(DataResult)
+				print(Player.UserId .. " | " .. Player.Name .. " loaded in without DataStore access.")
+				break
+			else
+				if i == maxRetries then
+					warn(DataResult)
+					Player:Kick("Internal server error, please rejoin.")
+				end
+			end
 		end
-	else
-		warn(DataResult)
-		if DataResult:match("Studio access to APIs is not allowed.") then
-			print(Player.UserId .. " | " .. Player.Name .. " loaded in without DataStore access.")
-		else
-			Player:Kick("Internal server error, please rejoin.")
-		end
+		task.wait(2)
 	end
 
 	Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
@@ -248,31 +306,7 @@ local function onPlayerEntered(Player)
 
 		while Player and isInGame == true do
 			task.wait(DataSettings.SaveTime * 60)
-			local PlayerData = Player:FindFirstChild(fileName)
-			local serialize = saveModule:CompileDataTable(PlayerData)
-			local dataCache = HttpService:JSONEncode(serialize)
-			local success, result = pcall(function()
-				DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
-					local newValue = serialize or oldValue
-					return newValue, {Player.UserId}
-				end)
-			end)
-
-			if success then
-				print(Player.Name .. " autosaved successfully.")
-				local maxCache = 4000000 --official limit is 4,000,000 as of February 2022
-				print(Player.Name .. " saved: ")
-				print(PlayerData.Name, serialize)
-				if #dataCache <= maxCache then
-					print("Cache: " .. #dataCache .. " /" .. maxCache)
-				else
-					warn("Cache exceeds limit: " .. #dataCache .. " /" .. maxCache)
-				end
-				print(#PlayerData:GetDescendants() .. " objects saved.")
-				print("Key: " .. PlayerKey)
-			else
-				warn(result)
-			end
+			updateData(Player, PlayerKey, true)
 		end
 
 		if plrRemove and plrRemove.Connected then
@@ -283,43 +317,17 @@ end
 
 --player removing
 local function onPlayerRemoving(Player)
-	if type(DataStoreResult) == "string" then
-		return
-	end
-
 	local PlayerKey = DataSettings.Key .. Player.UserId
 	local PlayerData = Player:FindFirstChild(fileName)
 	if PlayerData then
-		--update
-		local serialize = saveModule:CompileDataTable(PlayerData)
-		local dataCache = HttpService:JSONEncode(serialize)
-		local success, result = pcall(function()
-			DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
-				local newValue = serialize or oldValue
-				return newValue, {Player.UserId}
-			end)
-		end)
-		if success then
-			local maxCache = 4000000 --official limit is 4,000,000 as of February 2022
-			print(Player.Name .. " saved: ")
-			print(PlayerData.Name, serialize)
-			if #dataCache <= maxCache then
-				print("Cache: " .. #dataCache .. " /" .. maxCache)
-			else
-				warn("Cache exceeds limit: " .. #dataCache .. " /" .. maxCache)
-			end
-			print(#PlayerData:GetDescendants() .. " objects saved.")
-			print("Key: " .. PlayerKey)
-		else
-			warn(Player.UserId .. " | " .. Player.Name .. " did not save!", result)
-		end
+		updateData(Player, PlayerKey)
+
+		--remove extra objects
 		for i, v in pairs(PlayerData:GetDescendants()) do
 			if v:IsA("ObjectValue") then
 				if v.Value then
 					Debris:AddItem(v.Value, 4)
 				end
-			else
-				continue
 			end
 		end
 	else

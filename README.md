@@ -5,7 +5,7 @@ A folder based Data Store script that is aimed for general use, reliability and 
 It scans objects stored under a folder, then serializes it to be stored into a Data Store.
 
 # Saving Features
-- Object attributes.
+- Can save attributes.
 - Capable of saving any Instance from Roblox Studio's Insert Object widget. Everything, including scripts and meshparts.
 - Ability to manipulate data with ease, especially if using a DataStore editor plugin.
 - Auto saving support, but is not recommended because DataStore throttling.

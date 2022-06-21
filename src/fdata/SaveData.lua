@@ -196,6 +196,12 @@ function DataSettings:CompileDataTable(DataFolder)
 							["Offset"] = prop.Y.Offset;
 						};
 					};
+				elseif typeof(prop) == "EnumItem" then
+					local enumItem = tostring(prop):split(".")
+					Data = {
+						["EnumType"] = enumItem[2];
+						["Name"] = enumItem[3];
+					}
 				elseif typeof(prop) == "Axes" then
 					Data = {
 						["AX"] = prop.X;
@@ -285,7 +291,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						--Appearance
 						Data[holdName]["CastShadow"] = Object.CastShadow;
 						Data[holdName]["Color"] = getProp(Object.Color);
-						Data[holdName]["Material"] = Object.Material.Name;
+						Data[holdName]["Material"] = getProp(Object.Material);
 						Data[holdName]["Reflectance"] = math.floor(Object.Reflectance * 1000)/1000;
 						Data[holdName]["Transparency"] = math.floor(Object.Transparency * 1000)/1000;
 						--Data
@@ -301,14 +307,14 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["RootPriority"] = Object.RootPriority;
 						Data[holdName]["Size"] = getProp(Object.Size);
 						--Surface
-						Data[holdName]["TopSurface"] = Object.TopSurface.Name;
-						Data[holdName]["BottomSurface"] = Object.BottomSurface.Name;
-						Data[holdName]["FrontSurface"] = Object.FrontSurface.Name;
-						Data[holdName]["BackSurface"] = Object.BackSurface.Name;
-						Data[holdName]["LeftSurface"] = Object.LeftSurface.Name;
-						Data[holdName]["RightSurface"] = Object.RightSurface.Name;
+						Data[holdName]["TopSurface"] = getProp(Object.TopSurface);
+						Data[holdName]["BottomSurface"] = getProp(Object.BottomSurface);
+						Data[holdName]["FrontSurface"] = getProp(Object.FrontSurface);
+						Data[holdName]["BackSurface"] = getProp(Object.BackSurface);
+						Data[holdName]["LeftSurface"] = getProp(Object.LeftSurface);
+						Data[holdName]["RightSurface"] = getProp(Object.RightSurface);
 						if Object:IsA("Part") then
-							Data[holdName]["Shape"] = Object.Shape.Name
+							Data[holdName]["Shape"] = getProp(Object.Shape)
 							if Object:IsA("Seat") then
 								Data[holdName]["Disabled"] = Object.Disabled
 							elseif Object:IsA("SpawnLocation") then
@@ -327,7 +333,7 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["Torque"] = Object.Torque
 							Data[holdName]["TurnSpeed"] = Object.TurnSpeed
 						elseif Object:IsA("TrussPart") then
-							Data[holdName]["Style"] = Object.Style.Name
+							Data[holdName]["Style"] = getProp(Object.Style)
 						elseif Object:IsA("MeshPart") then
 							Data[holdName]["MeshId"] = Object.MeshId
 							Data[holdName]["TextureID"] = Object.TextureID
@@ -338,7 +344,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Scale"] = getProp(Object.Scale);
 					Data[holdName]["VertexColor"] = getProp(Object.VertexColor);
 					if Object:IsA("SpecialMesh") then
-						Data[holdName]["MeshType"] = Object.MeshType.Name
+						Data[holdName]["MeshType"] = getProp(Object.MeshType)
 						Data[holdName]["MeshId"] = Object.MeshId
 						Data[holdName]["TextureId"] = Object.TextureId
 					end
@@ -351,7 +357,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["TextureId"] = Object.TextureId
 					Data[holdName]["ToolTip"] = Object.ToolTip
 				elseif Object:IsA("SurfaceAppearance") then
-					Data[holdName]["AlphaMode"] = Object.AlphaMode.Name
+					Data[holdName]["AlphaMode"] = getProp(Object.AlphaMode)
 					Data[holdName]["ColorMap"] = Object.ColorMap
 					Data[holdName]["MetalnessMap"] = Object.MetalnessMap
 					Data[holdName]["NormalMap"] = Object.NormalMap
@@ -359,7 +365,7 @@ function DataSettings:CompileDataTable(DataFolder)
 				elseif Object:IsA("Accoutrement") then
 					Data[holdName]["AttachmentPoint"] = getProp(Object.AttachmentPoint)
 					if Object:IsA("Accessory") then
-						Data[holdName]["AccessoryType"] = Object.AccessoryType.Name
+						Data[holdName]["AccessoryType"] = getProp(Object.AccessoryType)
 					end
 				elseif Object:IsA("Camera") then
 					Data[holdName]["CFrame"] = getProp(Object.CFrame)
@@ -369,7 +375,7 @@ function DataSettings:CompileDataTable(DataFolder)
 							["ClassName"] = Object.CameraSubject.ClassName;
 						}
 					end
-					Data[holdName]["CameraType"] = Object.CameraType.Name
+					Data[holdName]["CameraType"] = getProp(Object.CameraType)
 					Data[holdName]["DiagonalFieldOfView"] = Object.DiagonalFieldOfView
 					Data[holdName]["FieldOfView"] = Object.FieldOfView
 					Data[holdName]["FieldOfViewMode"] = Object.FieldOfViewMode
@@ -383,12 +389,12 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["AutomaticScalingEnabled"] = Object.AutomaticScalingEnabled
 					Data[holdName]["BreakJointsOnDeath"] = Object.BreakJointsOnDeath
 					Data[holdName]["CameraOffset"] = getProp(Object.CameraOffset)
-					Data[holdName]["DisplayDistanceType"] = Object.DisplayDistanceType.Name
+					Data[holdName]["DisplayDistanceType"] = getProp(Object.DisplayDistanceType)
 					Data[holdName]["DisplayName"] = Object.DisplayName
 					Data[holdName]["MaxHealth"] = Object.MaxHealth
 					Data[holdName]["Health"] = Object.Health
 					Data[holdName]["HealthDisplayDistance"] = Object.HealthDisplayDistance
-					Data[holdName]["HealthDisplayType"] = Object.HealthDisplayType.Name
+					Data[holdName]["HealthDisplayType"] = getProp(Object.HealthDisplayType)
 					Data[holdName]["HipHeight"] = Object.HipHeight
 					Data[holdName]["UseJumpPower"] = Object.UseJumpPower
 					Data[holdName]["RequiresNeck"] = Object.RequiresNeck
@@ -398,9 +404,9 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["MaxSlopeAngle"] = Object.MaxSlopeAngle
 					Data[holdName]["TargetPoint"] = getProp(Object.TargetPoint)
 					Data[holdName]["NameDisplayDistance"] = Object.NameDisplayDistance
-					Data[holdName]["NameOcclusion"] = Object.NameOcclusion.Name
+					Data[holdName]["NameOcclusion"] = getProp(Object.NameOcclusion)
 					Data[holdName]["PlatformStand"] = Object.PlatformStand
-					Data[holdName]["RigType"] = Object.RigType.Name
+					Data[holdName]["RigType"] = getProp(Object.RigType)
 					Data[holdName]["Sit"] = Object.Sit
 					Data[holdName]["WalkToPoint"] = getProp(Object.WalkToPoint)
 				elseif Object:IsA("HumanoidDescription") then
@@ -507,10 +513,10 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["AutoLocalize"] = Object.AutoLocalize
 					Data[holdName]["ClickablePrompt"] = Object.ClickablePrompt
 					Data[holdName]["Enabled"] = Object.Enabled
-					Data[holdName]["Exclusivity"] = Object.Exclusivity.Name
-					Data[holdName]["GamepadKeyCode"] = Object.GamepadKeyCode.Name
+					Data[holdName]["Exclusivity"] = getProp(Object.Exclusivity)
+					Data[holdName]["GamepadKeyCode"] = getProp(Object.GamepadKeyCode)
 					Data[holdName]["HoldDuration"] = Object.HoldDuration
-					Data[holdName]["KeyboardKeyCode"] = Object.KeyboardKeyCode.Name
+					Data[holdName]["KeyboardKeyCode"] = getProp(Object.KeyboardKeyCode)
 					Data[holdName]["MaxActivationDistance"] = Object.MaxActivationDistance
 					Data[holdName]["ObjectText"] = Object.ObjectText
 					Data[holdName]["RequiresLineOfSight"] = Object.RequiresLineOfSight
@@ -520,17 +526,17 @@ function DataSettings:CompileDataTable(DataFolder)
 							["ClassName"] = Object.RootLocalizationTable.ClassName;
 						}
 					end
-					Data[holdName]["Style"] = Object.Style.Name
+					Data[holdName]["Style"] = getProp(Object.Style)
 					Data[holdName]["UIOffset"] = getProp(Object.UIOffset)
 				elseif Object:IsA("Dialog") then
-					Data[holdName]["BehaviorType"] = Object.BehaviorType.Name
+					Data[holdName]["BehaviorType"] = getProp(Object.BehaviorType)
 					Data[holdName]["ConversationDistance"] = Object.ConversationDistance
 					Data[holdName]["GoodbyeChoiceActive"] = Object.GoodbyeChoiceActive
 					Data[holdName]["GoodbyeDialog"] = Object.GoodbyeDialog
 					Data[holdName]["InUse"] = Object.InUse
 					Data[holdName]["InitialPrompt"] = Object.InitialPrompt
-					Data[holdName]["Purpose"] = Object.Purpose.Name
-					Data[holdName]["Tone"] = Object.Tone.Name
+					Data[holdName]["Purpose"] = getProp(Object.Purpose)
+					Data[holdName]["Tone"] = getProp(Object.Tone)
 					Data[holdName]["TriggerDistance"] = Object.TriggerDistance
 					Data[holdName]["UIOffset"] = getProp(Object.UIOffset)
 				elseif Object:IsA("DialogChoice") then
@@ -550,7 +556,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Playing"] = Object.Playing;
 					Data[holdName]["RollOffMaxDistance"] = Object.RollOffMaxDistance;
 					Data[holdName]["RollOffMinDistance"] = Object.RollOffMinDistance;
-					Data[holdName]["RollOffMode"] = Object.RollOffMode.Name;
+					Data[holdName]["RollOffMode"] = getProp(Object.RollOffMode);
 					if Object.SoundGroup then
 						Data[holdName]["SoundGroup"] = {
 							["Location"] = Object.SoundGroup:GetFullName();
@@ -596,14 +602,14 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Color"] = getProp(Object.Color);
 					Data[holdName]["LightEmission"] = Object.LightEmission;
 					Data[holdName]["LightInfluence"] = Object.LightInfluence;
-					Data[holdName]["Orientation"] = Object.Orientation.Name;
+					Data[holdName]["Orientation"] = getProp(Object.Orientation);
 					Data[holdName]["Size"] = getProp(Object.Size);
 					Data[holdName]["Squash"] = getProp(Object.Squash);
 					Data[holdName]["Texture"] = Object.Texture;
 					Data[holdName]["Transparency"] = getProp(Object.Transparency);
 					Data[holdName]["ZOffset"] = Object.ZOffset;
 					--Emission
-					Data[holdName]["EmissionDirection"] = Object.EmissionDirection.Name;
+					Data[holdName]["EmissionDirection"] = getProp(Object.EmissionDirection);
 					Data[holdName]["Enabled"] = Object.Enabled;
 					Data[holdName]["Lifetime"] = getProp(Object.Lifetime);
 					Data[holdName]["Rate"] = Object.Rate;
@@ -612,9 +618,9 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Speed"] = getProp(Object.Speed);
 					Data[holdName]["SpreadAngle"] = getProp(Object.SpreadAngle);
 					--EmitterShape
-					Data[holdName]["Shape"] = Object.Shape.Name;
-					Data[holdName]["ShapeInOut"] = Object.ShapeInOut.Name;
-					Data[holdName]["ShapeStyle"] = Object.ShapeStyle.Name;
+					Data[holdName]["Shape"] = getProp(Object.Shape);
+					Data[holdName]["ShapeInOut"] = getProp(Object.ShapeInOut);
+					Data[holdName]["ShapeStyle"] = getProp(Object.ShapeStyle);
 					--Motion
 					Data[holdName]["Acceleration"] = getProp(Object.Acceleration);
 					--Particles
@@ -630,7 +636,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["LightInfluence"] = Object.LightInfluence;
 					Data[holdName]["Texture"] = Object.Texture;
 					Data[holdName]["TextureLength"] = Object.TextureLength;
-					Data[holdName]["TextureMode"] = Object.TextureMode.Name;
+					Data[holdName]["TextureMode"] = getProp(Object.TextureMode);
 					Data[holdName]["TextureSpeed"] = Object.TextureSpeed;
 					Data[holdName]["Transparency"] = getProp(Object.Transparency);
 					Data[holdName]["ZOffset"] = Object.ZOffset;
@@ -657,7 +663,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["BlastPreasure"] = Object.BlastPreasure;
 					Data[holdName]["BlastRadius"] = Object.BlastRadius;
 					Data[holdName]["DestroyJointRadiusPercent"] = Object.DestroyJointRadiusPercent;
-					Data[holdName]["ExplosionType"] = Object.ExplosionType.Name;
+					Data[holdName]["ExplosionType"] = getProp(Object.ExplosionType);
 					Data[holdName]["Position"] = getProp(Object.Position);
 					Data[holdName]["TimeScale"] = Object.TimeScale;
 					Data[holdName]["Visible"] = Object.Visible;
@@ -675,7 +681,7 @@ function DataSettings:CompileDataTable(DataFolder)
 							["ClassName"] = Object.Adornee.ClassName;
 						}
 					end
-					Data[holdName]["DepthMode"] = Object.DepthMode.Name
+					Data[holdName]["DepthMode"] = getProp(Object.DepthMode)
 					Data[holdName]["Enabled"] = Object.Enabled;
 					Data[holdName]["FillColor"] = getProp(Object.FillColor);
 					Data[holdName]["FillTransparency"] = Object.FillTransparency
@@ -718,7 +724,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["MinLength"] = Object.MinLength;
 					Data[holdName]["Texture"] = Object.Texture;
 					Data[holdName]["TextureLength"] = Object.TextureLength;
-					Data[holdName]["TextureMode"] = Object.TextureMode.Name;
+					Data[holdName]["TextureMode"] = getProp(Object.TextureMode);
 					Data[holdName]["Transparency"] = getProp(Object.Transparency);
 					Data[holdName]["WidthScale"] = getProp(Object.WidthScale);
 				elseif Object:IsA("Attachment") then
@@ -735,7 +741,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Transparency"] = Object.Transparency
 					Data[holdName]["ZIndex"] = Object.ZIndex
 					--Data
-					Data[holdName]["Face"] = Object.Face.Name
+					Data[holdName]["Face"] = getProp(Object.Face)
 					if Object:IsA("Texture") then
 						Data[holdName]["OffsetStudsU"] = Object.OffsetStudsU
 						Data[holdName]["OffsetStudsV"] = Object.OffsetStudsV
@@ -798,11 +804,11 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["Range"] = Object.Range
 					elseif Object:IsA("SurfaceLight") then
 						Data[holdName]["Angle"] = Object.Angle
-						Data[holdName]["Face"] = Object.Face.Name
+						Data[holdName]["Face"] = getProp(Object.Face)
 						Data[holdName]["Range"] = Object.Range
 					elseif Object:IsA("SpotLight") then
 						Data[holdName]["Angle"] = Object.Angle
-						Data[holdName]["Face"] = Object.Face.Name
+						Data[holdName]["Face"] = getProp(Object.Face)
 						Data[holdName]["Range"] = Object.Range
 					end
 				elseif Object:IsA("ValueBase") then
@@ -839,11 +845,11 @@ function DataSettings:CompileDataTable(DataFolder)
 						}
 					end
 					if Object:IsA("AlignOrientation") then
-						Data[holdName]["AlignType"] = Object.AlignType.Name
+						Data[holdName]["AlignType"] = getProp(Object.AlignType)
 						Data[holdName]["CFrame"] = getProp(Object.CFrame)
 						Data[holdName]["MaxAngularVelocity"] = Object.MaxAngularVelocity
 						Data[holdName]["MaxTorque"] = Object.MaxTorque
-						Data[holdName]["Mode"] = Object.Mode.Name
+						Data[holdName]["Mode"] = getProp(Object.Mode)
 						Data[holdName]["PrimaryAxis"] = getProp(Object.PrimaryAxis)
 						Data[holdName]["PrimaryAxisOnly"] = Object.PrimaryAxisOnly
 						Data[holdName]["ReactionTorqueEnabled"] = Object.ReactionTorqueEnabled
@@ -854,7 +860,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["ApplyAtCenterOfMass"] = Object.ApplyAtCenterOfMass
 						Data[holdName]["MaxForce"] = Object.MaxForce
 						Data[holdName]["MaxVelocity"] = Object.MaxVelocity
-						Data[holdName]["Mode"] = Object.Mode.Name
+						Data[holdName]["Mode"] = getProp(Object.Mode)
 						Data[holdName]["Position"] = getProp(Object.Position)
 						Data[holdName]["ReactionForceEnabled"] = Object.ReactionForceEnabled
 						Data[holdName]["Responsiveness"] = Object.Responsiveness
@@ -863,7 +869,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["AngularVelocity"] = getProp(Object.AngularVelocity)
 						Data[holdName]["MaxTorque"] = Object.MaxTorque
 						Data[holdName]["ReactionTorqueEnabled"] = Object.ReactionTorqueEnabled
-						Data[holdName]["RelativeTo"] = Object.RelativeTo.Name
+						Data[holdName]["RelativeTo"] = getProp(Object.RelativeTo)
 					elseif Object:IsA("BallSocketConstraint") then
 						Data[holdName]["LimitsEnabled"] = Object.LimitsEnabled
 						Data[holdName]["MaxFrictionTorque"] = Object.MaxFrictionTorque
@@ -874,7 +880,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["TwistUpperAngle"] = Object.TwistUpperAngle
 						Data[holdName]["UpperAngle"] = Object.UpperAngle
 					elseif Object:IsA("SlidingBallConstraint") then
-						Data[holdName]["ActuatorType"] = Object.ActuatorType.Name
+						Data[holdName]["ActuatorType"] = getProp(Object.ActuatorType)
 						Data[holdName]["LimitsEnabled"] = Object.LimitsEnabled
 						Data[holdName]["LinearResponsiveness"] = Object.LinearResponsiveness
 						Data[holdName]["MotorMaxAcceleration"] = Object.MotorMaxAcceleration
@@ -887,7 +893,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["UpperLimit"] = Object.UpperLimit
 						Data[holdName]["Velocity"] = Object.Velocity
 						if Object:IsA("CylindricalConstraint") then
-							Data[holdName]["AngularActuatorType"] = Object.AngularActuatorType.Name
+							Data[holdName]["AngularActuatorType"] = getProp(Object.AngularActuatorType)
 							Data[holdName]["AngularLimitsEnabled"] = Object.AngularLimitsEnabled
 							Data[holdName]["AngularResponsiveness"] = Object.AngularResponsiveness
 							Data[holdName]["AngularRestitution"] = Object.AngularRestitution
@@ -903,7 +909,7 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["UpperAngle"] = Object.UpperAngle
 						end
 					elseif Object:IsA("HingeConstraint") then
-						Data[holdName]["ActuatorType"] = Object.ActuatorType.Name
+						Data[holdName]["ActuatorType"] = getProp(Object.ActuatorType)
 						Data[holdName]["AngularResponsiveness"] = Object.AngularResponsiveness
 						Data[holdName]["AngularSpeed"] = Object.AngularSpeed
 						Data[holdName]["AngularVelocity"] = Object.AngularVelocity
@@ -922,10 +928,10 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["MaxForce"] = Object.MaxForce
 						Data[holdName]["PlaneVelocity"] = getProp(Object.PlaneVelocity)
 						Data[holdName]["PrimaryTangentAxis"] = getProp(Object.PrimaryTangentAxis)
-						Data[holdName]["RelativeTo"] = Object.RelativeTo.Name
+						Data[holdName]["RelativeTo"] = getProp(Object.RelativeTo)
 						Data[holdName]["SecondaryTangentAxis"] = getProp(Object.SecondaryTangentAxis)
 						Data[holdName]["VectorVelocity"] = getProp(Object.VectorVelocity)
-						Data[holdName]["VelocityConstraintMode"] = Object.VelocityConstraintMode.Name
+						Data[holdName]["VelocityConstraintMode"] = getProp(Object.VelocityConstraintMode)
 					elseif Object:IsA("LineForce") then
 						Data[holdName]["ApplyAtCenterOfMass"] = Object.ApplyAtCenterOfMass
 						Data[holdName]["InverseSquareLaw"] = Object.InverseSquareLaw
@@ -963,7 +969,7 @@ function DataSettings:CompileDataTable(DataFolder)
 						Data[holdName]["Stiffness"] = Object.Stiffness
 						Data[holdName]["Thickness"] = Object.Thickness
 					elseif Object:IsA("Torque") then
-						Data[holdName]["RelativeTo"] = Object.RelativeTo.Name
+						Data[holdName]["RelativeTo"] = getProp(Object.RelativeTo)
 						Data[holdName]["Torque"] = getProp(Object.Torque)
 					elseif Object:IsA("TorsionSpringConstraint") then
 						Data[holdName]["Coils"] = Object.Coils
@@ -982,7 +988,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					elseif Object:IsA("VectorForce") then
 						Data[holdName]["ApplyAtCenterOfMass"] = Object.ApplyAtCenterOfMass
 						Data[holdName]["Force"] = getProp(Object.Force)
-						Data[holdName]["RelativeTo"] = Object.RelativeTo.Name
+						Data[holdName]["RelativeTo"] = getProp(Object.RelativeTo)
 					end
 				elseif Object:IsA("NoCollisionConstraint") or Object:IsA("WeldConstraint") then
 					Data[holdName]["Enabled"] = Object.Enabled
@@ -1012,7 +1018,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					if Object:IsA("LayerCollector") then
 						Data[holdName]["Enabled"] = Object.Enabled
 						Data[holdName]["ResetOnRespawn"] = Object.ResetOnRespawn
-						Data[holdName]["ZIndexBehavior"] = Object.ZIndexBehavior.Name
+						Data[holdName]["ZIndexBehavior"] = getProp(Object.ZIndexBehavior)
 						if Object:IsA("ScreenGui") then
 							Data[holdName]["DisplayOrder"] = Object.DisplayOrder
 							Data[holdName]["IgnoreGuiInset"] = Object.IgnoreGuiInset
@@ -1053,21 +1059,21 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["Brightness"] = Object.Brightness
 							Data[holdName]["CanvasSize"] = getProp(Object.CanvasSize)
 							Data[holdName]["ClipsDescendants"] = Object.ClipsDescendants
-							Data[holdName]["Face"] = Object.Face.Name
+							Data[holdName]["Face"] = getProp(Object.Face)
 							Data[holdName]["LightInfluence"] = Object.LightInfluence
 							Data[holdName]["PixelsPerStud"] = Object.PixelsPerStud
-							Data[holdName]["SizingMode"] = Object.SizingMode.Name
+							Data[holdName]["SizingMode"] = getProp(Object.SizingMode)
 							Data[holdName]["ToolPunchThroughDistance"] = Object.ToolPunchThroughDistance
 							Data[holdName]["ZOffset"] = Object.ZOffset
 						end
 					elseif Object:IsA("GuiObject") then
 						Data[holdName]["Active"] = Object.Active
 						Data[holdName]["AnchorPoint"] = getProp(Object.AnchorPoint)
-						Data[holdName]["AutomaticSize"] = Object.AutomaticSize.Name
+						Data[holdName]["AutomaticSize"] = getProp(Object.AutomaticSize)
 						Data[holdName]["BackgroundColor3"] = getProp(Object.BackgroundColor3)
 						Data[holdName]["BackgroundTransparency"] = Object.BackgroundTransparency
 						Data[holdName]["BorderColor3"] = getProp(Object.BorderColor3)
-						Data[holdName]["BorderMode"] = Object.BorderMode.Name
+						Data[holdName]["BorderMode"] = getProp(Object.BorderMode)
 						Data[holdName]["BorderSizePixel"] = Object.BorderSizePixel
 						Data[holdName]["ClipsDescendants"] = Object.ClipsDescendants
 						Data[holdName]["LayoutOrder"] = Object.LayoutOrder
@@ -1105,31 +1111,31 @@ function DataSettings:CompileDataTable(DataFolder)
 							}
 						end
 						Data[holdName]["Size"] = getProp(Object.Size)
-						Data[holdName]["SizeConstraint"] = Object.SizeConstraint.Name
+						Data[holdName]["SizeConstraint"] = getProp(Object.SizeConstraint)
 						Data[holdName]["Transparency"] = Object.Transparency
 						Data[holdName]["Visible"] = Object.Visible
 						Data[holdName]["ZIndex"] = Object.ZIndex
 						if Object:IsA("Frame") then
-							Data[holdName]["Style"] = Object.Style.Name
+							Data[holdName]["Style"] = getProp(Object.Style)
 						elseif Object:IsA("ScrollingFrame") then
-							Data[holdName]["AutomaticCanvasSize"] = Object.AutomaticCanvasSize.Name
+							Data[holdName]["AutomaticCanvasSize"] = getProp(Object.AutomaticCanvasSize)
 							Data[holdName]["BottomImage"] = Object.BottomImage
 							Data[holdName]["CanvasPosition"] = getProp(Object.CanvasPosition)
 							Data[holdName]["CanvasSize"] = getProp(Object.CanvasSize)
-							Data[holdName]["ElasticBehavior"] = Object.ElasticBehavior.Name
-							Data[holdName]["HorizontalScrollBarInset"] = Object.HorizontalScrollBarInset.Name
+							Data[holdName]["ElasticBehavior"] = getProp(Object.ElasticBehavior)
+							Data[holdName]["HorizontalScrollBarInset"] = getProp(Object.HorizontalScrollBarInset)
 							Data[holdName]["MidImage"] = Object.MidImage
 							Data[holdName]["ScrollBarImageColor3"] = getProp(Object.ScrollBarImageColor3)
 							Data[holdName]["ScrollBarImageTransparency"] = Object.ScrollBarImageTransparency
 							Data[holdName]["ScrollBarThickness"] = Object.ScrollBarThickness
 							Data[holdName]["ScrollVelocity"] = getProp(Object.ScrollVelocity)
-							Data[holdName]["ScrollingDirection"] = Object.ScrollingDirection.Name
+							Data[holdName]["ScrollingDirection"] = getProp(Object.ScrollingDirection)
 							Data[holdName]["ScrollingEnabled"] = Object.ScrollingEnabled
 							Data[holdName]["TopImage"] = Object.TopImage
-							Data[holdName]["VerticalScrollBarInset"] = Object.VerticalScrollBarInset.Name
-							Data[holdName]["VerticalScrollBarPosition"] = Object.VerticalScrollBarPosition.Name
+							Data[holdName]["VerticalScrollBarInset"] = getProp(Object.VerticalScrollBarInset)
+							Data[holdName]["VerticalScrollBarPosition"] = getProp(Object.VerticalScrollBarPosition)
 						elseif Object:IsA("TextLabel") or Object:IsA("TextButton") then
-							Data[holdName]["Font"] = Object.Font.Name
+							Data[holdName]["Font"] = getProp(Object.Font)
 							Data[holdName]["LineHeight"] = Object.LineHeight
 							Data[holdName]["MaxVisibleGraphemes"] = Object.MaxVisibleGraphemes
 							Data[holdName]["RichText"] = Object.RichText
@@ -1140,14 +1146,14 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["TextStrokeColor3"] = getProp(Object.TextStrokeColor3)
 							Data[holdName]["TextStrokeTransparency"] = Object.TextStrokeTransparency
 							Data[holdName]["TextTransparency"] = Object.TextTransparency
-							Data[holdName]["TextTruncate"] = Object.TextTruncate.Name
+							Data[holdName]["TextTruncate"] = getProp(Object.TextTruncate)
 							Data[holdName]["TextWrapped"] = Object.TextWrapped
-							Data[holdName]["TextXAlignment"] = Object.TextXAlignment.Name
-							Data[holdName]["TextYAlignment"] = Object.TextYAlignment.Name
+							Data[holdName]["TextXAlignment"] = getProp(Object.TextXAlignment)
+							Data[holdName]["TextYAlignment"] = getProp(Object.TextYAlignment)
 						elseif Object:IsA("TextBox") then
 							Data[holdName]["ClearTextOnFocus"] = Object.ClearTextOnFocus
 							Data[holdName]["CursorPosition"] = Object.CursorPosition
-							Data[holdName]["Font"] = Object.Font.Name
+							Data[holdName]["Font"] = getProp(Object.Font)
 							Data[holdName]["LineHeight"] = Object.LineHeight
 							Data[holdName]["MaxVisibleGraphemes"] = Object.MaxVisibleGraphemes
 							Data[holdName]["MultiLine"] = Object.MultiLine
@@ -1163,18 +1169,18 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["TextStrokeColor3"] = getProp(Object.TextStrokeColor3)
 							Data[holdName]["TextStrokeTransparency"] = Object.TextStrokeTransparency
 							Data[holdName]["TextTransparency"] = Object.TextTransparency
-							Data[holdName]["TextTruncate"] = Object.TextTruncate.Name
+							Data[holdName]["TextTruncate"] = getProp(Object.TextTruncate)
 							Data[holdName]["TextWrapped"] = Object.TextWrapped
-							Data[holdName]["TextXAlignment"] = Object.TextXAlignment.Name
-							Data[holdName]["TextYAlignment"] = Object.TextYAlignment.Name
+							Data[holdName]["TextXAlignment"] = getProp(Object.TextXAlignment)
+							Data[holdName]["TextYAlignment"] = getProp(Object.TextYAlignment)
 						elseif Object:IsA("ImageLabel") then
 							Data[holdName]["Image"] = Object.Image
 							Data[holdName]["ImageColor3"] = getProp(Object.ImageColor3)
 							Data[holdName]["ImageRectOffset"] = getProp(Object.ImageRectOffset)
 							Data[holdName]["ImageRectSize"] = getProp(Object.ImageRectSize)
 							Data[holdName]["ImageTransparency"] = Object.ImageTransparency
-							Data[holdName]["ResampleMode"] = Object.ResampleMode.Name
-							Data[holdName]["ScaleType"] = Object.ScaleType.Name
+							Data[holdName]["ResampleMode"] = getProp(Object.ResampleMode)
+							Data[holdName]["ScaleType"] = getProp(Object.ScaleType)
 							Data[holdName]["SliceCenter"] = getProp(Object.SliceCenter)
 							Data[holdName]["SliceScale"] = Object.SliceScale
 							Data[holdName]["TileSize"] = getProp(Object.TileSize)
@@ -1186,8 +1192,8 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["ImageRectSize"] = getProp(Object.ImageRectSize)
 							Data[holdName]["ImageTransparency"] = Object.ImageTransparency
 							Data[holdName]["PressedImage"] = Object.PressedImage
-							Data[holdName]["ResampleMode"] = Object.ResampleMode.Name
-							Data[holdName]["ScaleType"] = Object.ScaleType.Name
+							Data[holdName]["ResampleMode"] = getProp(Object.ResampleMode)
+							Data[holdName]["ScaleType"] = getProp(Object.ScaleType)
 							Data[holdName]["SliceCenter"] = getProp(Object.SliceCenter)
 							Data[holdName]["SliceScale"] = Object.SliceScale
 							Data[holdName]["TileSize"] = getProp(Object.TileSize)
@@ -1224,9 +1230,9 @@ function DataSettings:CompileDataTable(DataFolder)
 							Data[holdName]["Axes"] = getProp(Object.Axes)
 						elseif Object:IsA("Handles") then
 							Data[holdName]["Faces"] = getProp(Object.Faces)
-							Data[holdName]["Style"] = Object.Style.Name
+							Data[holdName]["Style"] = getProp(Object.Style)
 						elseif Object:IsA("SurfaceSelection") then
-							Data[holdName]["TargetSurface"] = Object.TargetSurface.Name
+							Data[holdName]["TargetSurface"] = getProp(Object.TargetSurface)
 						end
 					elseif Object:IsA("PVAdornment") then
 						if Object.Adornee then
@@ -1236,7 +1242,7 @@ function DataSettings:CompileDataTable(DataFolder)
 							}
 						end
 						if Object:IsA("HandleAdornment") then
-							Data[holdName]["AdornCullingMode"] = Object.AdornCullingMode.Name
+							Data[holdName]["AdornCullingMode"] = getProp(Object.AdornCullingMode)
 							Data[holdName]["AlwaysOnTop"] = Object.AlwaysOnTop
 							Data[holdName]["CFrame"] = getProp(Object.CFrame)
 							Data[holdName]["SizeRelativeOffset"] = getProp(Object.SizeRelativeOffset)
@@ -1289,8 +1295,8 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["PassThrough"] = Object.PassThrough
 				elseif Object:IsA("UIAspectRatioConstraint") then
 					Data[holdName]["AspectRatio"] = Object.AspectRatio
-					Data[holdName]["AspectType"] = Object.AspectType.Name
-					Data[holdName]["DominantAxis"] = Object.DominantAxis.Name
+					Data[holdName]["AspectType"] = getProp(Object.AspectType)
+					Data[holdName]["DominantAxis"] = getProp(Object.DominantAxis)
 				elseif Object:IsA("UICorner") then
 					Data[holdName]["CornerRadius"] = getProp(Object.CornerRadius)
 				elseif Object:IsA("UIGradient") then
@@ -1300,22 +1306,22 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["Rotation"] = Object.Rotation
 					Data[holdName]["Transparency"] = getProp(Object.Transparency)
 				elseif Object:IsA("UIGridStyleLayout") then
-					Data[holdName]["FillDirection"] = Object.FillDirection.Name
-					Data[holdName]["HorizontalAlignment"] = Object.HorizontalAlignment.Name
-					Data[holdName]["SortOrder"] = Object.SortOrder.Name
-					Data[holdName]["VerticalAlignment"] = Object.VerticalAlignment.Name
+					Data[holdName]["FillDirection"] = getProp(Object.FillDirection)
+					Data[holdName]["HorizontalAlignment"] = getProp(Object.HorizontalAlignment)
+					Data[holdName]["SortOrder"] = getProp(Object.SortOrder)
+					Data[holdName]["VerticalAlignment"] = getProp(Object.VerticalAlignment)
 					if Object:IsA("UIGridLayout") then
 						Data[holdName]["CellPadding"] = getProp(Object.CellPadding)
 						Data[holdName]["CellSize"] = getProp(Object.CellSize)
 						Data[holdName]["FillDirectionMaxCells"] = Object.FillDirectionMaxCells
-						Data[holdName]["StartCorner"] = Object.StartCorner.Name
+						Data[holdName]["StartCorner"] = getProp(Object.StartCorner)
 					elseif Object:IsA("UIListLayout") then
 						Data[holdName]["Padding"] = getProp(Object.Padding)
 					elseif Object:IsA("UIPageLayout") then
 						Data[holdName]["Animated"] = Object.Animated
 						Data[holdName]["Circular"] = Object.Circular
-						Data[holdName]["EasingDirection"] = Object.EasingDirection.Name
-						Data[holdName]["EasingStyle"] = Object.EasingStyle.Name
+						Data[holdName]["EasingDirection"] = getProp(Object.EasingDirection)
+						Data[holdName]["EasingStyle"] = getProp(Object.EasingStyle)
 						Data[holdName]["GamepadInputEnabled"] = Object.GamepadInputEnabled
 						Data[holdName]["Padding"] = getProp(Object.Padding)
 						Data[holdName]["ScrollWheelInputEnabled"] = Object.ScrollWheelInputEnabled
@@ -1324,7 +1330,7 @@ function DataSettings:CompileDataTable(DataFolder)
 					elseif Object:IsA("UITableLayout") then
 						Data[holdName]["FillEmptySpaceColumns"] = Object.FillEmptySpaceColumns
 						Data[holdName]["FillEmptySpaceRows"] = Object.FillEmptySpaceRows
-						Data[holdName]["MajorAxis"] = Object.MajorAxis.Name
+						Data[holdName]["MajorAxis"] = getProp(Object.MajorAxis)
 						Data[holdName]["Padding"] = getProp(Object.Padding)
 					end
 				elseif Object:IsA("UIPadding") then
@@ -1338,10 +1344,10 @@ function DataSettings:CompileDataTable(DataFolder)
 					Data[holdName]["MaxSize"] = getProp(Object.MaxSize)
 					Data[holdName]["MinSize"] = getProp(Object.MinSize)
 				elseif Object:IsA("UIStroke") then
-					Data[holdName]["ApplyStrokeMode"] = Object.ApplyStrokeMode.Name
+					Data[holdName]["ApplyStrokeMode"] = getProp(Object.ApplyStrokeMode)
 					Data[holdName]["Color"] = getProp(Object.Color)
 					Data[holdName]["Enabled"] = Object.Enabled
-					Data[holdName]["LineJoinMode"] = Object.LineJoinMode.Name
+					Data[holdName]["LineJoinMode"] = getProp(Object.LineJoinMode)
 					Data[holdName]["Thickness"] = Object.Thickness
 					Data[holdName]["Transparency"] = Object.Transparency
 				elseif Object:IsA("UITextSizeConstraint") then

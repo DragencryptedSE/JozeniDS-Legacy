@@ -1,312 +1,164 @@
 --[Made by Jozeni00]--
 print("Jozeni00\'s Data Serializer Legacy loaded.")
+
+--[[
+
+	[API]
+
+	----------------------------------------------------------------------------------
+	--[DataSerializer]--
+
+	PROPERTIES:
+
+	*dictionary* DataSerializer.DataStores
+	A dictionary list of DataStores in use.
+
+	METHODS:
+
+	*DataStore* DataSerializer:GetStore(name: string, options: DataStoreOptions)
+	Gets the data store from DataStoreService.
+
+	name: string (optional) (Default: "") The name of the Data Store.
+	options: DataStoreOptions (optional)
+
+	Returns a DataStore table with usable functions.
+
+	*dictionary* DataSerializer:ListStores()
+	Returns a single dictionary of GlobalDataStores currently in use.
+		{
+			[Name] = GlobalDataStore;
+		}
+
+	*void* DataSerializer:SetRetries(retries: int, delay: double)
+	Sets the number of retries and the time of delay (in seconds) in between retries.
+
+	retries: int (optional) (Default: 3)
+	delay: double (optional) (Default: 2.0)
+
+	----------------------------------------------------------------------------------
+	--[DataStore]--
+
+	PROPERTIES:
+
+	*GlobalDataStore* DataStore.GlobalDataStore
+	The GlobalDataStore currently being used.
+
+	METHODS:
+
+	*folder*, *dictionary*, *variant* DataStore:Get(plr: player, key: string, userids: array, options: DataStoreSetOptions)
+	Initializes/gets the data store folder for the player. If the folder does not exist, it will be parented to the player.
+	If the player does not have old data, then PresetPlayerData will be set as the new default data for the player.
+	plr:SetAttribute("DataStoreLoaded", folderName: string) is called after the player finishes loading, returns the name of Folder.
+
+	plr: player
+	Key: string
+	userids: array (optional) Array of UserIds. Recommended for handling GDPR. i.e. {Player.UserId} or {123456}.
+	options: DataStoreSetOptions (optional) DataStoreSetOptions object. Part of DataStore v2, metadata options.
+
+	Returns the Folder of PlayerData that is parented to the player, a dictionary of serialized PlayerData,
+		and DataStoreKeyInfo object if the player has played before, or Version Identifier object if the player is new.
+		If an error occured while retrieving Player data, then only the Folder will be returned.
+
+	*void* DataStore:Update(plr: Player, key: string)
+	Serializes the folder, then sends it to the Data Store.
+	plr:SetAttribute("IsSavingData", true) is called first, while DataStore is updating data.
+	plr:SetAttribute("IsSavingData", false) is called after the DataStore finishes updating data.
+
+	plr: player
+	Key: string
+
+	*void* DataStore:CleanUpdate(plr: Player, key: string)
+	Serializes the folder, then sends it to the Data Store. Also, cleans up debris.
+		This is only recommended to use when the player leaves.
+	plr:SetAttribute("IsSavingData", true) is called first, while DataStore is updating data.
+	plr:SetAttribute("IsSavingData", false) is called after the DataStore finishes updating data.
+
+	plr: player
+	Key: string
+
+	*dictionary*, *DataStoreKeyInfo* DataStore:Remove(key: string)
+	Deletes the key associated with this DataStore.
+
+	Key: string
+
+	Returns a dictionary of the old deleted data, and DataStoreKeyInfo object.
+
+]]
+
+--[[
+
+	How To Use:
+
+	Insert a folder named "PresetPlayerData" into ServerStorage.
+	Any instance under the folder will be serialized sent to DataStore.
+
+]]
+
+--[[
+Prebuilt Script that utilizes this module:
+
+--[Made by Jozeni00]--
+--settings
 local DataSettings = {
 	--{DATA}--
 	--Any changes made below are susceptible to a clean data wipe, or revert data to its previous.
 	["Name"] = "DS_TestLV0-0-0"; --DataStore name for the entire game.
-	["Scope"] = ""; --The scope of the datastore for a live game. Roblox officially discourages the use of Scope.
 	["Key"] = "Plr_"; --prefix for key. Example: "Player_" is used for "Player_123456".
 
 	--{FEATURES}--
-	["FolderName"] = "PlayerData"; --Name of the folder that will appear under the Player.
-	["LoadedName"] = "DataStoreLoaded"; --Name of attribute when the player successfully loads DataStore.
-
 	["AutoSave"] = true; --set to true to enable auto saving.
 	["SaveTime"] = 1; --time (in minutes) how often it should automatically save.
 
 	["UseStudioScope"] = true; --set to true to use a different Scope for Studio only.
-	["DevName"] = "DEV_DS_TestLV0-0-0"; --Name of the Data Store for Studio if UseStudioScope is true.
-	["DevScope"] = ""; --Scope of the Data Store for Studio, if UseStudioScope is true.
+	["DevName"] = "DEV/DS_TestLV0-0-0"; --Name of the Data Store for Studio if UseStudioScope is true.
 	["DevKey"] = "Dev_"; --Key of the Data Store for Studio, if UseStudioScope is true.
 }
 
---[[
-	[LAST UPDATED]: 09 May 2022
+--scripts
+local ServerScriptService = game:GetService("ServerScriptService")
+local dataModule = ServerScriptService:FindFirstChild("DataSerializer") -- DataSerializer Module Script.
+local DataSerializer = require(dataModule)
 
-	I appreciate you for using Jozeni00's DataStore script!
-
-	Difference between Legacy and 2.0 versions:
-	[Legacy]: Saving is strict, object names are required to be unique.
-		- Good for most common needs.
-		- Can only save values and folders (with the exception of ObjectValue, can save any object class).
-		- Updating PresetPlayerData will not require you to use the command bar.
-
-	[2.0]: Successor to Legacy version.
-		- Unrestricted saving.
-		- Can save any object class under PresetPlayerData.
-		- Aimed towards hardcore RPG/Adventure games.
-		- Updating PresetPlayerData will require you to use the command bar afterwards.
-			- (Blame Roblox for disallowing developers readable access to object unique identifiers.)
-
-	[Instructions]
-	Studio API Services are no longer required for this script to operate.
-	Enable Studio API services to grant Roblox Studio access to DataStore services. (Optional)
-	1. Setting up folders:
-		- Insert "PresetPlayerData" folder in ServerStorage. (optional)
-			- Used for setting up default player data.
-				- The "real" PlayerData should be found under each Player.
-				- Attributes and Objects can be saved.
-			- The folder will clone itself to the Player using the Scope's name.
-			- All non-deprecated objects and custom attributes are supported.
-			- For MeshParts and SurfaceAppearance to save, a copy of itself must be located within ServerStorage.
-			- For Scripts, LocalScript and ModuleScript to save, a copy of that script with the same name
-				must be found within ServerStorage.
-			- Deprecated objects are not supported, but there may still be some that do fully save.
-				For example, Accessories and Hats (deprecated) are both Accoutrements, meaning
-					they share mostly the same properties.
-
-			- Allowed instances to be placed under PresetPlayerData (and real PlayerData):
-				- Folder
-				- IntValue
-				- NumberValue
-				- StringValue
-				- BoolValue
-				- RayValue
-				- CFrameValue
-				- Vector3Value
-				- Color3Value
-				- BrickColorValue
-				- ObjectValue
-
-		- Insert "DataTempFile" folder in ReplicatedStorage. (optional)
-			- `ObjectValue.Value` saves are automatically placed under this file.
-			- It is recommended to use unique naming schemes for objects that use a reference to
-				another object for the best results.
-
-	2. A folder named, from DataSettings["Scope"] will appear under all Players.
-		- The Player's data folder can always be edited from Server Scripts and Server-sided test play.
-		- Any changes made under PlayerData will always save.
-		- Changes made from a LocalScript or Client side will never save.
-
-	4. To link data across all Places of this game, this Script and PresetPlayerData must be present
-		in each Place.
-
-	5. The DataStore's "Name" and "Scope" will appear in the output when the game closes after test-play.
-		- The "Key" will also appear in the output when a player leaves the game.
-		- A Player's ObjectValues will clean up while leaving.
-
-	{PRO TIP}
-	How to link DataStore across all Places:
-	[Setting up a package link]
-	- Right-click this script object to "Convert To Package..." and follow the process of converting to a package.
-	- After, a link object should appear under the same script you converted to package.
-	- In the link's properties, enable "AutoUpdate".
-	- You may now copy this script object and paste it into all of the other Places within this game.
-
-	[Usage basics]
-	- Let's say you changed DataSettings["Name"] from "JozeniDS_V1.5" to "JozeniDS_V1.6", and applied changes.
-	- Once done, right-click this script object and update package.
-	- The change only applies within this place.
-	- To update the other scripts with the same package link, you would have to go re-publish or re-save each Place
-		via File --> Save (or Publish) for the changes to take affect per Place containing the updated DataStore script.
-
-	How to convert a Union to a MeshPart:
-	1. Right-click union, select "Export selection..."
-	2. In Studio, click "VIEW" tab (at top screen), and enable "Asset Manager".
-	3. In Asset Manager window, click the "upload" icon (appears like `[->`, but facing upwards).
-	4. When it makes you select a file, select the `.obj` file to upload it.
-	5. A new Mesh should appear in "Meshes" of Asset Manager.
-
-	Referencing PlayerData Example:
-	-----------------------------------------------------------------
-		-- wait for datastore to load
-		if not Player:GetAttribute("DataStoreLoaded") then
-			Player:GetAttributeChangedSignal("DataStoreLoaded"):Wait() -- returns datastore folder name, "PlayerData"
-		end
-
-		--New Data:
-		local PlayerData = Player:FindFirstChild(Player:GetAttribute("DataStoreLoaded"))
-		local SavedData = PlayerData:FindFirstChild("SavedData")
-		local Gold = SavedData:FindFirstChild("Gold")
-		Gold.Value = 2600 --changing data from a LocalScript will not save because it is not Server-Sided.
-
-		--Player on leaving... New Data has been saved.
-	-----------------------------------------------------------------
-	- "Instance:WaitForChild()" should be used sparingly in server Scripts because it adds actual "wait(default number)".
-	- Emergency case example would be if an object's descendants count is too large.
-
-	[Conclusion]
-	"This is as efficient as it gets." -EthanTano (February 2022)
-]]
-
---http
+--players
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
-local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
-
-local fileName = DataSettings.FolderName
-local msSave = script:FindFirstChild("SaveData")
-local msLoad = script:FindFirstChild("LoadData")
-
-local saveModule = require(msSave)
-local loadModule = require(msLoad)
-
---main code
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TempFile = ReplicatedStorage:FindFirstChild("DataTempFile")
-if not TempFile then
-	TempFile = Instance.new("Folder")
-	TempFile.Name = "DataTempFile"
-	TempFile.Parent = ReplicatedStorage
-end
-
---storage
-local ServerStorage = game:GetService("ServerStorage")
-local PresetPlayerData = ServerStorage:FindFirstChild("PresetPlayerData")
-if not PresetPlayerData then
-	warn("folder PresetPlayerData does not exist in ServerStorage!")
-	PresetPlayerData = Instance.new("Folder")
-	PresetPlayerData.Name = "PresetPlayerData"
-	PresetPlayerData.Parent = ServerStorage
-end
 
 --set scope
 if DataSettings.UseStudioScope then
 	if RunService:IsStudio() then
 		DataSettings.Name = DataSettings.DevName
-		DataSettings.Scope = DataSettings.DevScope
 		DataSettings.Key = DataSettings.DevKey
 	end
 end
-if DataSettings.Scope == "" then
-	DataSettings.Scope = "global"
-end
 
---data
-local DataStoreService = game:GetService("DataStoreService")
-local success, DataStoreResult = pcall(function()
-	local PlayerDataStore = DataStoreService:GetDataStore(DataSettings.Name, DataSettings.Scope)
-	return PlayerDataStore
-end)
-if not success then
-	warn(DataStoreResult)
-end
+local DataStore = DataSerializer:GetStore(DataSettings.Name)
 
---update function
-local function updateData(Player, PlayerKey, isAutoSave)
-	if type(DataStoreResult) ~= "string" and not Player:GetAttribute("IsSavingData") then
-		Player:SetAttribute("IsSavingData", true)
-		--player data
-		local PlayerData = Player:FindFirstChild(fileName)
-		local serialize = saveModule:CompileDataTable(PlayerData)
-		local dataCache = HttpService:JSONEncode(serialize)
+--on entered
+function onPlayerEntered(Player)
+	local key = DataSettings.Key .. Player.UserId
 
-		--update
-		local maxRetries = 3
-		for i = 1, maxRetries do
-			local success, result = pcall(function()
-				DataStoreResult:UpdateAsync(PlayerKey, function(oldValue)
-					local newValue = serialize or oldValue
-					return newValue, {Player.UserId}
-				end)
-			end)
+	--player data
+	local PlayerData = DataStore:Get(Player, key, {Player.UserId})
 
-			--results
-			if success then
-				if isAutoSave then
-					print(Player.Name .. " autosaved successfully.")
-				end
-				local maxCache = 4000000 --official limit is 4,000,000
-				print(Player.Name .. " saved: ")
-				print(PlayerData.Name, serialize)
-				if #dataCache <= maxCache then
-					print("Cache: " .. #dataCache .. " /" .. maxCache)
-				else
-					warn("Cache exceeds limit: " .. #dataCache .. " /" .. maxCache)
-				end
-				print("Key: " .. PlayerKey)
-				break
-			else
-				if i == maxRetries then
-					warn(result)
-				end
-			end
-			task.wait(2)
-		end
-
-		Player:SetAttribute("IsSavingData", false)
-	end
-end
-
---player entered
-local function onPlayerEntered(Player)
-	local PlayerKey = DataSettings.Key .. Player.UserId
-
-	local PlayerData = PresetPlayerData:Clone()
-	PlayerData.Name = fileName
-	--check for objs
-	for i, v in pairs(PlayerData:GetDescendants()) do
-		if v:IsA("ObjectValue") then
-			if v.Value then
-				local newObj = v.Value:Clone()
-				newObj.Parent = TempFile
-				v.Value = newObj
-			end
-		end
-	end
-	PlayerData.Parent = Player
-
-	--load data
-	local maxRetries = 3
-	for i = 1, maxRetries do
-		local success, DataResult = pcall(function()
-			if type(DataStoreResult) == "string" then
-				return DataStoreResult
-			else
-				local DataTable = DataStoreResult:GetAsync(PlayerKey)
-				if DataTable == nil then
-					print(Player.Name .. " is a new player, creating save...")
-					DataTable = saveModule:CompileDataTable(PlayerData)
-					DataStoreResult:SetAsync(PlayerKey, DataTable, {Player.UserId})
-				else
-					--print(DataTable)
-				end
-				return DataTable
-			end
-		end)
-
-		if success then
-			if type(DataStoreResult) == "string" then
-				print(Player.UserId .. " | " .. Player.Name .. " loaded in offline mode.")
-			else
-				loadModule:Load(Player, PlayerData, DataResult)
-				print(Player.UserId .. " | " .. Player.Name .. " loaded in " .. DataSettings.Scope .. ".")
-			end
-			break
-		else
-			if DataResult:match("Studio access to APIs is not allowed.") then
-				warn(DataResult)
-				print(Player.UserId .. " | " .. Player.Name .. " loaded in without DataStore access.")
-				break
-			else
-				if i == maxRetries then
-					warn(DataResult)
-					Player:Kick("Internal server error, please rejoin.")
-				end
-			end
-		end
-		task.wait(2)
-	end
-
-	Player:SetAttribute(DataSettings.LoadedName, DataSettings.FolderName)
-
-	if DataSettings.AutoSave and type(DataStoreResult) ~= "string" then
-		local isInGame = true
+	if DataStore and DataSettings.AutoSave then
+		local isGame = true
 		local plrRemove = nil
 		if DataSettings.SaveTime < 1 then
 			DataSettings.SaveTime = 1
 		end
+		local saveTimer = DataSettings.SaveTime * 60
 
 		plrRemove = Players.PlayerRemoving:Connect(function(plr)
 			if plr == Player then
-				isInGame = false
+				isGame = false
 			end
 		end)
 
-		while Player and isInGame == true do
-			task.wait(DataSettings.SaveTime * 60)
-			updateData(Player, PlayerKey, true)
+		while Player and isGame do
+			task.wait(saveTimer)
+
+			--update
+			DataStore:Update(Player, key)
 		end
 
 		if plrRemove and plrRemove.Connected then
@@ -315,46 +167,315 @@ local function onPlayerEntered(Player)
 	end
 end
 
---player removing
-local function onPlayerRemoving(Player)
-	local PlayerKey = DataSettings.Key .. Player.UserId
-	local PlayerData = Player:FindFirstChild(fileName)
-	if PlayerData then
-		updateData(Player, PlayerKey)
-
-		--remove extra objects
-		for i, v in pairs(PlayerData:GetDescendants()) do
-			if v:IsA("ObjectValue") then
-				if v.Value then
-					Debris:AddItem(v.Value, 4)
-				end
-			end
-		end
-	else
-		warn(Player.Name, "PlayerData is nil!")
-	end
+--on removing
+function onPlayerRemoving(Player)
+	local key = DataSettings.Key .. Player.UserId
+	DataStore:CleanUpdate(Player, key)
 end
 
---check current players
 for i, v in pairs(Players:GetPlayers()) do
-	local wrapPlrEntered = coroutine.wrap(function(plr)
-		onPlayerEntered(plr)
-	end)
-	wrapPlrEntered(v)
+	if v:IsA("Player") then
+		local onEnter = coroutine.wrap(function()
+			onPlayerEntered(v)
+		end)
+		onEnter()
+	end
 end
 
 --events
 Players.PlayerAdded:Connect(onPlayerEntered)
 Players.PlayerRemoving:Connect(onPlayerRemoving)
 
---bind to close
 game:BindToClose(function()
-	warn("Closing...")
+	print("Closing...")
 	for i, v in pairs(Players:GetPlayers()) do
-		v:Kick()
+		if v:IsA("Player") then
+			v:Kick()
+		end
 	end
 	task.wait(3)
-	print("Name: " .. DataSettings.Name)
-	print("Scope: " .. DataSettings.Scope)
+	print("Name:", DataSettings.Name)
 end)
+--[Made by Jozeni00]--
+]]
+
+local loadData = script:FindFirstChild("LoadData")
+local saveData = script:FindFirstChild("SaveData")
+
+local LoadModule = require(loadData)
+local SaveModule = require(saveData)
+
+local HttpService = game:GetService("HttpService")
+local Debris = game:GetService("Debris")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+
+local DataStoreService = game:GetService("DataStoreService")
+local DataSerializer = {
+	["DataStores"] = {};
+}
+
+local fileName = "PlayerData"
+local isSavingName = "IsSaving"
+local loadedName = "DSLoaded"
+local retryCount = 3
+local retryWait = 2
+
+local defaultRetry = 3
+local defaultWait = 2
+
+--make folders
+local DataTempFile = ReplicatedStorage:FindFirstChild("DataTempFile")
+if not DataTempFile then
+	DataTempFile = Instance.new("Folder")
+	DataTempFile.Name = "DataTempFile"
+	DataTempFile.Parent = ReplicatedStorage
+end
+
+local PresetPlayerData = ServerStorage:FindFirstChild("PresetPlayerData")
+if not PresetPlayerData then
+	PresetPlayerData = Instance.new("Folder")
+	PresetPlayerData.Parent = ServerStorage
+end
+PresetPlayerData.Name = fileName
+
+function DataSerializer:GetStore(name, options)
+	if not name then
+		name = ""
+	end
+
+	local DataStore = DataSerializer.DataStores[name]
+
+	if not DataStore then
+		DataSerializer.DataStores[name] = {}
+		DataStore = DataSerializer.DataStores[name]
+
+		local success, DataStoreResult = pcall(function()
+			DataStore["GlobalDataStore"] = DataStoreService:GetDataStore(name, options)
+			return DataStore["GlobalDataStore"]
+		end)
+
+		if not success then
+			print(DataStoreResult)
+			DataSerializer.DataStores[name] = nil
+			return nil
+		end
+
+		--functions
+		function DataStore:Get(plr, key, userids, dataOptions)
+			--check for loaded data
+			local PlayerData = nil
+			if plr:GetAttribute(loadedName) then
+				PlayerData = plr:FindFirstChild(plr:GetAttribute(loadedName))
+			else
+				PlayerData = PresetPlayerData:Clone()
+				PlayerData.Name = fileName
+				PlayerData.Parent = plr
+			end
+
+			for i, v in pairs(PlayerData:GetDescendants()) do
+				if v:IsA("ObjectValue") then
+					if v.Value then
+						--clone object
+						local newObject = v.Value:Clone()
+						newObject.Parent = DataTempFile
+
+						--set new value
+						v.Value = newObject
+					end
+				end
+			end
+
+			local GlobalDataStore = DataStore.GlobalDataStore
+			local data = nil
+			local keyInfo = nil
+
+			if GlobalDataStore then
+
+				for i = 0, retryCount do
+					local success, DataResult, info = pcall(function()
+						--get data
+						local Data, keyInfo = GlobalDataStore:GetAsync(key)
+
+						--set data
+						if not Data then
+							print(plr.Name .. " is a new player, creating new save...")
+
+							Data = SaveModule:CompileDataTable(PlayerData)
+							local versionId = GlobalDataStore:SetAsync(key, Data, userids, dataOptions)
+							keyInfo = versionId
+						end
+
+						return Data, keyInfo
+					end)
+
+					if success then
+						data = DataResult
+						keyInfo = info
+
+						LoadModule:Load(plr, PlayerData, DataResult)
+						print(plr.Name .. " loaded in the experience.")
+						break
+					else
+						if DataResult:match("Studio access to APIs is not allowed.") then
+							print(plr.Name .. " loaded in without Data Store API access.")
+							break
+						else
+							if i == retryCount then
+								warn(DataResult)
+								plr:Kick("Internal server error, please rejoin.")
+								break
+							end
+						end
+					end
+
+					task.wait(retryWait)
+				end
+			else
+				print(plr.Name .. " loaded in offline mode.")
+			end
+
+			plr:SetAttribute(loadedName, fileName)
+			return PlayerData, data, keyInfo
+		end
+
+		function DataStore:Update(plr, key)
+			local GlobalDataStore = DataStore.GlobalDataStore
+			if GlobalDataStore and plr:GetAttribute(loadedName) and not plr:GetAttribute(isSavingName) then
+				plr:SetAttribute(isSavingName, true)
+
+				--player data
+				local PlayerData = plr:FindFirstChild(fileName)
+				local serialize = SaveModule:CompileDataTable(PlayerData)
+
+				local maxCache = 4000000 -- Max data is 4,000,000
+				local dataCache = HttpService:JSONEncode(serialize)
+
+				for i = 0, retryCount do
+
+					--update data
+					local success, result = pcall(function()
+						GlobalDataStore:UpdateAsync(key, function(oldValue, keyInfo)
+							local newValue = serialize or oldValue
+
+							local userIDs = keyInfo:GetUserIds()
+							local metadata = keyInfo:GetMetadata()
+							return newValue, userIDs, metadata
+						end)
+					end)
+
+					if not success then
+						--if failed
+						if i == retryCount then
+							warn(result)
+							break
+						end
+					else
+						--print results
+						print(plr.Name .. " saved:")
+						print(fileName, serialize)
+						print("Cache:", #dataCache .. " /" .. maxCache)
+						if #dataCache > maxCache then
+							warn("Cache exceeds limit, data may throttle.")
+						end
+						print("Key: " .. key)
+						break
+					end
+
+					task.wait(retryWait)
+				end
+
+				--task.wait(6)
+				plr:SetAttribute(isSavingName, false)
+			end
+		end
+
+		--the final save
+		function DataStore:CleanUpdate(plr, key)
+
+			local timeToRemove = retryCount * retryWait
+
+			if plr:GetAttribute(loadedName) then
+				local PlayerData = plr:FindFirstChild(fileName)
+
+				for i, v in pairs(PlayerData:GetDescendants()) do
+					if v:IsA("ObjectValue") then
+						if v.Value then
+							Debris:AddItem(v.Value, timeToRemove)
+						end
+					end
+				end
+			end
+
+			DataStore:Update(plr, key)
+		end
+
+		--remove data
+		function DataStore:Remove(key)
+			local GlobalDataStore = DataStore.GlobalDataStore
+
+			for i = 0, retryCount do
+
+				--update data
+				local success, result, keyInfo = pcall(function()
+					local oldData, keyInfo =  GlobalDataStore:RemoveAsync(key)
+					return oldData, keyInfo
+				end)
+
+				if not success then
+					--if failed
+					if i == retryCount then
+						warn(result)
+						return nil
+					end
+				else
+					--print results
+					print("Old Data:", result)
+					print("Key: " .. key .. " was successfully removed.")
+					return result, keyInfo
+				end
+
+				task.wait(retryWait)
+			end
+		end
+	end
+
+	return DataStore
+end
+
+function DataSerializer:ListStores()
+	local list = {}
+
+	for i, v in pairs(DataSerializer.DataStores) do
+		if v.GlobalDataStore then
+			list[i] = v.GlobalDataStore
+		end
+	end
+
+	return list
+end
+
+function DataSerializer:SetRetries(retries, cool)
+	--set retries
+	if retries and type(retries) == "number" then
+		if retries < 1 then
+			retries = 1
+		end
+		retryCount = math.floor(retries)
+	else
+		retryCount = defaultRetry
+	end
+
+	--set cooldown
+	if cool and type(cool) == "number" then
+		if cool < 1 then
+			cool = 1
+		end
+		retryWait = math.floor(cool)
+	else
+		retryWait = defaultWait
+	end
+end
+
+return DataSerializer
 --[Made by Jozeni00]--

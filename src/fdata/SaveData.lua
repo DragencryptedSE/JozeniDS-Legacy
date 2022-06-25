@@ -159,6 +159,10 @@ function DataSettings:CompileDataTable(DataFolder)
 					}
 				elseif typeof(prop) == "CFrame" then
 					local components = {prop:components()}
+					for i, v in pairs(components) do
+						components[i] = math.floor(v * 1000)/1000
+					end
+
 					Data = {
 						["x"] = components[1] or 0;
 						["y"] = components[2] or 0;
@@ -1404,6 +1408,10 @@ function DataSettings:CompileDataTable(DataFolder)
 					}
 				elseif v:IsA("CFrameValue") then
 					local components = {v.Value:components()}
+					for a, b in pairs(components) do
+						components[a] = math.floor(b * 1000)/1000
+					end
+
 					Data[v.Name] = {
 						["ClassName"] = v.ClassName;
 						["x"] = components[1] or 0;

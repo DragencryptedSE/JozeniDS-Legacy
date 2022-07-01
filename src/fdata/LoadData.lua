@@ -330,15 +330,16 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 													local mesh = nil
 													for i, v in pairs(ServerStorage:GetDescendants()) do
 														if v:IsA("MeshPart") then
-															if v.MeshId == info.MeshId and v.TextureID == info.TextureID then
+															if v.MeshId == info.MeshId and v.DoubleSided == info.DoubleSided and v.RenderFidelity == propTable(info.RenderFidelity) and v.CollisionFidelity == propTable(info.CollisionFidelity) then
 																mesh = v
 																newObj:ApplyMesh(v)
+																newObj.TextureID = info.TextureID
 																break
 															end
 														end
 													end
 													if not mesh then
-														warn("MeshPart: " .. newObj.Name .. " with MeshId: " .. info.MeshId .. " and TextureID: " .. info.TextureID .. " has not been found in ServerStorage." )
+														warn("MeshPart: " .. newObj.Name .. " with MeshId: " .. info.MeshId .. ", DoubleSided: " .. tostring(info.DoubleSided) .. ", RenderFidelity: " .. info.RenderFidelity.Name .. " and CollisionFidelity: " .. info.CollisionFidelity.Name .. " has not been found in ServerStorage." )
 													end
 												end
 											end

@@ -341,6 +341,9 @@ function DataSettings:CompileDataTable(DataFolder)
 						elseif Object:IsA("MeshPart") then
 							Data[holdName]["MeshId"] = Object.MeshId
 							Data[holdName]["TextureID"] = Object.TextureID
+							Data[holdName]["DoubleSided"] = Object.DoubleSided
+							Data[holdName]["RenderFidelity"] = getProp(Object.RenderFidelity)
+							Data[holdName]["CollisionFidelity"] = getProp(Object.CollisionFidelity)
 						end
 					end
 				elseif Object:IsA("DataModelMesh") then

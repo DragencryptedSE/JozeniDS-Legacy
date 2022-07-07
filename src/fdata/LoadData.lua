@@ -332,7 +332,41 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														if v:IsA("MeshPart") then
 															if v.MeshId == info.MeshId and v.DoubleSided == info.DoubleSided and v.RenderFidelity == propTable(info.RenderFidelity) and v.CollisionFidelity == propTable(info.CollisionFidelity) then
 																mesh = v
-																newObj:ApplyMesh(v)
+																newObj:Destroy()
+																newObj = v:Clone()
+																newObj:ClearAllChildren()
+
+																--apply previous properties
+																newObj.Archivable = info.Archivable
+																newObj.Name = info.Name
+																setAttributes(newObj, info)
+
+																--Appearance
+																newObj.CastShadow = info.CastShadow
+																newObj.Color = propTable(info.Color)
+																newObj.Material = propTable(info.Material)
+																newObj.Reflectance = info.Reflectance
+																newObj.Transparency = info.Transparency
+																--Data
+																newObj.Locked = info.Locked
+																newObj.CFrame = propTable(info.CFrame)
+																--Collision
+																newObj.CanCollide = info.CanCollide
+																newObj.CanTouch = info.CanTouch
+																newObj.CollisionGroupId = info.CollisionGroupId
+																--Behavior
+																newObj.Anchored = info.Anchored
+																newObj.Massless = info.Massless
+																newObj.RootPriority = info.RootPriority
+																newObj.Size = propTable(info.Size)
+																--Surface
+																newObj.TopSurface = propTable(info.TopSurface)
+																newObj.BottomSurface = propTable(info.BottomSurface)
+																newObj.FrontSurface = propTable(info.FrontSurface)
+																newObj.BackSurface = propTable(info.BackSurface)
+																newObj.LeftSurface = propTable(info.LeftSurface)
+																newObj.RightSurface = propTable(info.RightSurface)
+
 																newObj.TextureID = info.TextureID
 																break
 															end
@@ -371,8 +405,14 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												if v:IsA("SurfaceAppearance") then
 													if v.AlphaMode == propTable(info.AlphaMode) and v.ColorMap == info.ColorMap and v.MetalnessMap == info.MetalnessMap and v.NormalMap == info.NormalMap and v.RoughnessMap == info.RoughnessMap then
 														surfaceAppearance = v
+														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
+
+														--apply previous properties
+														newObj.Archivable = info.Archivable
+														newObj.Name = info.Name
+														setAttributes(newObj, info)
 														break
 													end
 												end
@@ -789,8 +829,6 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												newObj.Value = info.Value
 											end
 										elseif newObj:IsA("BaseScript") then
-											newObj.Disabled = info.Disabled
-											newObj.LinkedSource = info.LinkedSource
 											local isScript = nil
 											for i, v in pairs(ServerStorage:GetDescendants()) do
 												if v:IsA(info.ClassName) then
@@ -799,6 +837,12 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
+
+														--apply previous properties
+														newObj.Archivable = info.Archivable
+														setAttributes(newObj, info)
+
+														newObj.Disabled = info.Disabled
 														break
 													end
 												end
@@ -808,7 +852,6 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												warn(info.ClassName .. ": " .. info.Name .. " with LinkedSource: " .. info.LinkedSource .. " has not been found in ServerStorage." )
 											end
 										elseif newObj:IsA("ModuleScript") then
-											newObj.LinkedSource = info.LinkedSource
 											local isScript = nil
 											for i, v in pairs(ServerStorage:GetDescendants()) do
 												if v:IsA("ModuleScript") then
@@ -817,6 +860,10 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
+
+														--apply previous properties
+														newObj.Archivable = info.Archivable
+														setAttributes(newObj, info)
 														break
 													end
 												end

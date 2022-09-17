@@ -4,91 +4,91 @@ print("Jozeni00\'s Data Serializer Legacy loaded.")
 --[[
 
 	[API]
-
+	
 	----------------------------------------------------------------------------------
 	--[DataSerializer]--
-
+	
 	PROPERTIES:
-
+	
 	*dictionary* DataSerializer.DataStores
 	A dictionary list of DataStores in use.
-
+	
 	METHODS:
-
+	
 	*DataStore* DataSerializer:GetStore(name: string, options: DataStoreOptions)
 	Gets the data store from DataStoreService.
-
+	
 	name: string (optional) (Default: "") The name of the Data Store.
 	options: DataStoreOptions (optional)
-
+	
 	Returns a DataStore table with usable functions.
-
+	
 	*dictionary* DataSerializer:ListStores()
 	Returns a single dictionary of GlobalDataStores currently in use.
 		{
 			[Name] = GlobalDataStore;
 		}
-
+	
 	*void* DataSerializer:SetRetries(retries: int, delay: double)
 	Sets the number of retries and the time of delay (in seconds) in between retries.
-
+	
 	retries: int (optional) (Default: 3)
 	delay: double (optional) (Default: 2.0)
-
+	
 	----------------------------------------------------------------------------------
 	--[DataStore]--
-
+	
 	PROPERTIES:
-
+	
 	*GlobalDataStore* DataStore.GlobalDataStore
 	The GlobalDataStore currently being used.
-
+	
 	METHODS:
-
+	
 	*folder*, *dictionary*, *variant* DataStore:Get(plr: player, key: string, userids: array, options: DataStoreSetOptions)
-	Initializes/gets the data store folder for the player. If the folder does not exist, it will be parented to the player.
+	Initializes/gets the data store folder for the player. If the folder does not exist, it will be parented to the player. 
 	If the player does not have old data, then PresetPlayerData will be set as the new default data for the player.
 	plr:SetAttribute("DataStoreLoaded", folderName: string) is called after the player finishes loading, returns the name of Folder.
-
+	
 	plr: player
 	Key: string
 	userids: array (optional) Array of UserIds. Recommended for handling GDPR. i.e. {Player.UserId} or {123456}.
 	options: DataStoreSetOptions (optional) DataStoreSetOptions object. Part of DataStore v2, metadata options.
-
-	Returns the Folder of PlayerData that is parented to the player, a dictionary of serialized PlayerData,
+	
+	Returns the Folder of PlayerData that is parented to the player, a dictionary of serialized PlayerData, 
 		and DataStoreKeyInfo object if the player has played before, or Version Identifier object if the player is new.
 		If an error occured while retrieving Player data, then only the Folder will be returned.
-
+	
 	*void* DataStore:Update(plr: Player, key: string)
 	Serializes the folder, then sends it to the Data Store.
 	plr:SetAttribute("IsSavingData", true) is called first, while DataStore is updating data.
 	plr:SetAttribute("IsSavingData", false) is called after the DataStore finishes updating data.
-
+	
 	plr: player
 	Key: string
-
+	
 	*void* DataStore:CleanUpdate(plr: Player, key: string)
 	Serializes the folder, then sends it to the Data Store. Also, cleans up debris.
 		This is only recommended to use when the player leaves.
 	plr:SetAttribute("IsSavingData", true) is called first, while DataStore is updating data.
 	plr:SetAttribute("IsSavingData", false) is called after the DataStore finishes updating data.
-
+		
 	plr: player
 	Key: string
-
+	
 	*dictionary*, *DataStoreKeyInfo* DataStore:Remove(key: string)
 	Deletes the key associated with this DataStore.
-
+		
 	Key: string
-
+	
 	Returns a dictionary of the old deleted data, and DataStoreKeyInfo object.
-
+	
 ]]
 
 --[[
-
+	
 	How To Use:
-
+	
 	Insert a folder named "PresetPlayerData" into ServerStorage.
 	Any instance under the folder will be serialized sent to DataStore.
 
@@ -136,10 +136,10 @@ local DataStore = DataSerializer:GetStore(DataSettings.Name)
 --on entered
 function onPlayerEntered(Player)
 	local key = DataSettings.Key .. Player.UserId
-
+	
 	--player data
 	local PlayerData = DataStore:Get(Player, key, {Player.UserId})
-
+	
 	if DataStore and DataSettings.AutoSave then
 		local isGame = true
 		local plrRemove = nil
@@ -147,20 +147,20 @@ function onPlayerEntered(Player)
 			DataSettings.SaveTime = 1
 		end
 		local saveTimer = DataSettings.SaveTime * 60
-
+		
 		plrRemove = Players.PlayerRemoving:Connect(function(plr)
 			if plr == Player then
 				isGame = false
 			end
 		end)
-
+		
 		while Player and isGame do
 			task.wait(saveTimer)
-
+			
 			--update
 			DataStore:Update(Player, key)
 		end
-
+		
 		if plrRemove and plrRemove.Connected then
 			plrRemove:Disconnect()
 		end
@@ -243,13 +243,13 @@ function DataSerializer:GetStore(name, options)
 	if not name then
 		name = ""
 	end
-
+	
 	local DataStore = DataSerializer.DataStores[name]
-
+	
 	if not DataStore then
 		DataSerializer.DataStores[name] = {}
 		DataStore = DataSerializer.DataStores[name]
-
+		
 		local success, DataStoreResult = pcall(function()
 			DataStore["GlobalDataStore"] = DataStoreService:GetDataStore(name, options)
 			return DataStore["GlobalDataStore"]
@@ -257,8 +257,6 @@ function DataSerializer:GetStore(name, options)
 
 		if not success then
 			print(DataStoreResult)
-			DataSerializer.DataStores[name] = nil
-			return nil
 		end
 
 		--functions
@@ -289,9 +287,9 @@ function DataSerializer:GetStore(name, options)
 			local GlobalDataStore = DataStore.GlobalDataStore
 			local data = nil
 			local keyInfo = nil
-
+			
 			if GlobalDataStore then
-
+				
 				for i = 0, retryCount do
 					local success, DataResult, info = pcall(function()
 						--get data
@@ -312,7 +310,7 @@ function DataSerializer:GetStore(name, options)
 					if success then
 						data = DataResult
 						keyInfo = info
-
+						
 						LoadModule:Load(plr, PlayerData, DataResult)
 						print(plr.Name .. " loaded in the experience.")
 						break
@@ -338,7 +336,7 @@ function DataSerializer:GetStore(name, options)
 			plr:SetAttribute(loadedName, fileName)
 			return PlayerData, data, keyInfo
 		end
-
+		
 		function DataStore:Update(plr, key)
 			local GlobalDataStore = DataStore.GlobalDataStore
 			if GlobalDataStore and plr:GetAttribute(loadedName) and not plr:GetAttribute(isSavingName) then
@@ -384,7 +382,7 @@ function DataSerializer:GetStore(name, options)
 
 					task.wait(retryWait)
 				end
-
+				
 				--task.wait(6)
 				plr:SetAttribute(isSavingName, false)
 			end
@@ -409,11 +407,11 @@ function DataSerializer:GetStore(name, options)
 
 			DataStore:Update(plr, key)
 		end
-
+		
 		--remove data
 		function DataStore:Remove(key)
 			local GlobalDataStore = DataStore.GlobalDataStore
-
+			
 			for i = 0, retryCount do
 
 				--update data
@@ -439,19 +437,19 @@ function DataSerializer:GetStore(name, options)
 			end
 		end
 	end
-
+	
 	return DataStore
 end
 
 function DataSerializer:ListStores()
 	local list = {}
-
+	
 	for i, v in pairs(DataSerializer.DataStores) do
 		if v.GlobalDataStore then
 			list[i] = v.GlobalDataStore
 		end
 	end
-
+	
 	return list
 end
 
@@ -465,7 +463,7 @@ function DataSerializer:SetRetries(retries, cool)
 	else
 		retryCount = defaultRetry
 	end
-
+	
 	--set cooldown
 	if cool and type(cool) == "number" then
 		if cool < 1 then

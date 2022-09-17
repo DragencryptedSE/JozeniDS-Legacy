@@ -269,17 +269,17 @@ function DataSerializer:GetStore(name, options)
 				PlayerData = PresetPlayerData:Clone()
 				PlayerData.Name = fileName
 				PlayerData.Parent = plr
-			end
 
-			for i, v in pairs(PlayerData:GetDescendants()) do
-				if v:IsA("ObjectValue") then
-					if v.Value then
-						--clone object
-						local newObject = v.Value:Clone()
-						newObject.Parent = DataTempFile
-
-						--set new value
-						v.Value = newObject
+				for i, v in pairs(PlayerData:GetDescendants()) do
+					if v:IsA("ObjectValue") then
+						if v.Value then
+							--clone object
+							local newObject = v.Value:Clone()
+							newObject.Parent = DataTempFile
+	
+							--set new value
+							v.Value = newObject
+						end
 					end
 				end
 			end

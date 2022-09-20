@@ -50,8 +50,6 @@ local function setAttributes(obj, val)
 					obj:SetAttribute(i, ColorSequence.new(sequence))
 				elseif v.dx then
 					obj:SetAttribute(i, Ray.new(Vector3.new(v.x, v.y, v.z), Vector3.new(v.dx, v.dy, v.dz)))
-				elseif v.Family then
-					obj:SetAttribute(i, Font.new(v.Family, Enum[v.Weight.EnumType][v.Weight.Name], Enum[v.Style.EnumType][v.Style.Name]))
 				end
 			end
 		end
@@ -115,8 +113,8 @@ local function propTable(prop)
 	return Data
 end
 
-local function setReference(newObj, parent, info, prop)
-	local scanForReference = coroutine.wrap(function()
+local function setReference(newObj: Instance, parent: Instance, info: {any}, prop: string, queue: {})
+	local scanForReference = coroutine.wrap(function(queueNum)
 		if not parent.Parent then
 			parent:GetPropertyChangedSignal("Parent"):Wait()
 		end
@@ -209,15 +207,22 @@ local function setReference(newObj, parent, info, prop)
 
 		--set reference
 		newObj[prop] = lastParent
+		queue[queueNum] = true
+		
 	end)
 
 	if info then
-		scanForReference()
+		--queue for referenced objects loaded
+		local queueNum = #queue + 1
+		queue[queueNum] = false
+		
+		scanForReference(queueNum)
 	end
 end
 
 function DataSettings:Load(Player, DataFolder, DataTable)
 	if DataTable ~= nil then
+		local objQueue = {}
 		local function Scan(Object, Data)
 			if type(Data) == "table" then
 				for i, v in pairs(Data) do
@@ -337,12 +342,12 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 																newObj:Destroy()
 																newObj = v:Clone()
 																newObj:ClearAllChildren()
-
+																
 																--apply previous properties
 																newObj.Archivable = info.Archivable
 																newObj.Name = info.Name
 																setAttributes(newObj, info)
-
+																
 																--Appearance
 																newObj.CastShadow = info.CastShadow
 																newObj.Color = propTable(info.Color)
@@ -368,7 +373,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 																newObj.BackSurface = propTable(info.BackSurface)
 																newObj.LeftSurface = propTable(info.LeftSurface)
 																newObj.RightSurface = propTable(info.RightSurface)
-
+																
 																newObj.TextureID = info.TextureID
 																break
 															end
@@ -410,7 +415,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-
+														
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														newObj.Name = info.Name
@@ -429,7 +434,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											end
 										elseif newObj:IsA("Camera") then
 											newObj.CFrame = propTable(info.CFrame)
-											setReference(newObj, parent, info.CameraSubject, "CameraSubject")
+											setReference(newObj, parent, info.CameraSubject, "CameraSubject", objQueue)
 											newObj.CameraType = propTable(info.CameraType)
 											newObj.DiagonalFieldOfView = info.DiagonalFieldOfView
 											newObj.FieldOfView = info.FieldOfView
@@ -533,8 +538,8 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.C0 = propTable(info.C0)
 											newObj.C1 = propTable(info.C1)
 											newObj.Enabled = info.Enabled
-											setReference(newObj, parent, info.Part0, "Part0")
-											setReference(newObj, parent, info.Part1, "Part1")
+											setReference(newObj, parent, info.Part0, "Part0", objQueue)
+											setReference(newObj, parent, info.Part1, "Part1", objQueue)
 											if newObj:IsA("Motor") then
 												newObj.CurrentAngle = info.CurrentAngle
 												newObj.DesiredAngle = info.DesiredAngle
@@ -562,7 +567,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.MaxActivationDistance = info.MaxActivationDistance
 											newObj.ObjectText = info.ObjectText
 											newObj.RequiresLineOfSight = info.RequiresLineOfSight
-											setReference(newObj, parent, info.RootLocalizationTable, "RootLocalizationTable")
+											setReference(newObj, parent, info.RootLocalizationTable, "RootLocalizationTable", objQueue)
 											newObj.Style = propTable(info.Style)
 											newObj.UIOffset = propTable(info.UIOffset)
 										elseif newObj:IsA("Dialog") then
@@ -593,7 +598,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.RollOffMinDistance = info.RollOffMinDistance
 											newObj.RollOffMode = propTable(info.RollOffMode)
 											newObj.SoundId = info.SoundId
-											setReference(newObj, parent, info.SoundGroup, "SoundGroup")
+											setReference(newObj, parent, info.SoundGroup, "SoundGroup", objQueue)
 											newObj.TimePosition = info.TimePosition
 											newObj.Volume = info.Volume
 											if newObj.Playing and not newObj.IsPlaying then
@@ -672,8 +677,8 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 										elseif newObj:IsA("Beam") then
 											newObj.Color = propTable(info.Color)
 											newObj.Enabled = info.Enabled
-											setReference(newObj, parent, info.Attachment0, "Attachment0")
-											setReference(newObj, parent, info.Attachment1, "Attachment1")
+											setReference(newObj, parent, info.Attachment0, "Attachment0", objQueue)
+											setReference(newObj, parent, info.Attachment1, "Attachment1", objQueue)
 											newObj.LightEmission = info.LightEmission
 											newObj.LightInfluence = info.LightInfluence
 											newObj.Texture = info.Texture
@@ -705,7 +710,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.Size = info.Size;
 											newObj.TimeScale = info.TimeScale;
 										elseif newObj:IsA("Highlight") then
-											setReference(newObj, parent, info.Adornee, "Adornee")
+											setReference(newObj, parent, info.Adornee, "Adornee", objQueue)
 											newObj.DepthMode = propTable(info.DepthMode)
 											newObj.Enabled = info.Enabled;
 											newObj.FillColor = propTable(info.FillColor);
@@ -725,8 +730,8 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.SparkleColor = propTable(info.SparkleColor);
 											newObj.TimeScale = info.TimeScale;
 										elseif newObj:IsA("Trail") then
-											setReference(newObj, parent, info.Attachment0, "Attachment0")
-											setReference(newObj, parent, info.Attachment1, "Attachment1")
+											setReference(newObj, parent, info.Attachment0, "Attachment0", objQueue)
+											setReference(newObj, parent, info.Attachment1, "Attachment1", objQueue)
 											newObj.Brightness = info.Brightness;
 											newObj.Color = propTable(info.Color);
 											newObj.Enabled = info.Enabled;
@@ -839,11 +844,11 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-
+														
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														setAttributes(newObj, info)
-
+														
 														newObj.Disabled = info.Disabled
 														break
 													end
@@ -862,7 +867,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-
+														
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														setAttributes(newObj, info)
@@ -877,8 +882,8 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.Color = propTable(info.Color)
 											newObj.Enabled = info.Enabled
 											newObj.Visible = info.Visible
-											setReference(newObj, parent, info.Attachment0, "Attachment0")
-											setReference(newObj, parent, info.Attachment1, "Attachment1")
+											setReference(newObj, parent, info.Attachment0, "Attachment0", objQueue)
+											setReference(newObj, parent, info.Attachment1, "Attachment1", objQueue)
 											if newObj:IsA("AlignOrientation") then
 												newObj.AlignType = propTable(info.AlignType)
 												newObj.CFrame = propTable(info.CFrame)
@@ -1027,13 +1032,13 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											end
 										elseif newObj:IsA("NoCollisionConstraint") or newObj:IsA("WeldConstraint") then
 											newObj.Enabled = info.Enabled
-											setReference(newObj, parent, info.Part0, "Part0")
-											setReference(newObj, parent, info.Part1, "Part1")
+											setReference(newObj, parent, info.Part0, "Part0", objQueue)
+											setReference(newObj, parent, info.Part1, "Part1", objQueue)
 										elseif newObj:IsA("LocalizationTable") then
 											newObj.SourceLocaleId = info.SourceLocaleId
 										elseif newObj:IsA("GuiBase2d") then
 											newObj.AutoLocalize = info.AutoLocalize
-											setReference(newObj, parent, info.RootLocalizationTable, "RootLocalizationTable")
+											setReference(newObj, parent, info.RootLocalizationTable, "RootLocalizationTable", objQueue)
 											if newObj:IsA("LayerCollector") then
 												newObj.Enabled = info.Enabled
 												newObj.ResetOnRespawn = info.ResetOnRespawn
@@ -1043,7 +1048,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 													newObj.IgnoreGuiInset = info.IgnoreGuiInset
 												elseif newObj:IsA("BillboardGui") then
 													newObj.Active = info.Active
-													setReference(newObj, parent, info.Adornee, "Adornee")
+													setReference(newObj, parent, info.Adornee, "Adornee", objQueue)
 													newObj.AlwaysOnTop = info.AlwaysOnTop
 													newObj.Brightness = info.Brightness
 													newObj.ClipsDescendants = info.ClipsDescendants
@@ -1063,7 +1068,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 													newObj.StudsOffsetWorldSpace = propTable(info.StudsOffsetWorldSpace)
 												elseif newObj:IsA("SurfaceGui") then
 													newObj.Active = info.Active
-													setReference(newObj, parent, info.Adornee, "Adornee")
+													setReference(newObj, parent, info.Adornee, "Adornee", objQueue)
 													newObj.AlwaysOnTop = info.AlwaysOnTop
 													newObj.Brightness = info.Brightness
 													newObj.CanvasSize = propTable(info.CanvasSize)
@@ -1086,14 +1091,14 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												newObj.BorderSizePixel = info.BorderSizePixel
 												newObj.ClipsDescendants = info.ClipsDescendants
 												newObj.LayoutOrder = info.LayoutOrder
-												setReference(newObj, parent, info.NextSelectionDown, "NextSelectionDown")
-												setReference(newObj, parent, info.NextSelectionLeft, "NextSelectionLeft")
-												setReference(newObj, parent, info.NextSelectionRight, "NextSelectionRight")
-												setReference(newObj, parent, info.NextSelectionUp, "NextSelectionUp")
+												setReference(newObj, parent, info.NextSelectionDown, "NextSelectionDown", objQueue)
+												setReference(newObj, parent, info.NextSelectionLeft, "NextSelectionLeft", objQueue)
+												setReference(newObj, parent, info.NextSelectionRight, "NextSelectionRight", objQueue)
+												setReference(newObj, parent, info.NextSelectionUp, "NextSelectionUp", objQueue)
 												newObj.Position = propTable(info.Position)
 												newObj.Rotation = info.Rotation
 												newObj.Selectable = info.Selectable
-												setReference(newObj, parent, info.SelectionImageObject, "SelectionImageObject")
+												setReference(newObj, parent, info.SelectionImageObject, "SelectionImageObject", objQueue)
 												newObj.Size = propTable(info.Size)
 												newObj.SizeConstraint = propTable(info.SizeConstraint)
 												newObj.Transparency = info.Transparency
@@ -1201,7 +1206,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 											newObj.Transparency = info.Transparency
 											newObj.Visible = info.Visible
 											if newObj:IsA("PartAdornment") then
-												setReference(newObj, parent, info.Adornee, "Adornee")
+												setReference(newObj, parent, info.Adornee, "Adornee", objQueue)
 												if newObj:IsA("ArcHandles") then
 													newObj.Axes = propTable(info.Axes)
 												elseif newObj:IsA("Handles") then
@@ -1211,7 +1216,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 													newObj.TargetSurface = propTable(info.TargetSurface)
 												end
 											elseif newObj:IsA("PVAdornment") then
-												setReference(newObj, parent, info.Adornee, "Adornee")
+												setReference(newObj, parent, info.Adornee, "Adornee", objQueue)
 												if newObj:IsA("HandleAdornment") then
 													newObj.AdornCullingMode = propTable(info.AdornCullingMode)
 													newObj.AlwaysOnTop = info.AlwaysOnTop
@@ -1247,8 +1252,8 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												newObj.SurfaceTransparency = info.SurfaceTransparency
 											end
 										elseif newObj:IsA("PathfindingLink") then
-											setReference(newObj, parent, info.Attachment0, "Attachment0")
-											setReference(newObj, parent, info.Attachment1, "Attachment1")
+											setReference(newObj, parent, info.Attachment0, "Attachment0", objQueue)
+											setReference(newObj, parent, info.Attachment1, "Attachment1", objQueue)
 											newObj.IsBidirectional = info.IsBidirectional
 											newObj.Label = info.Label
 										elseif newObj:IsA("PathfindingModifier") then
@@ -1361,6 +1366,29 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 			end
 		end
 		Scan(DataFolder, DataTable)
+		
+		--check if objects fully loaded in
+		local fullyLoaded = false
+		--print(objQueue)
+		repeat
+			RunService.Heartbeat:Wait()
+			
+			--find any missing objs in queue
+			local foundAllObj = true
+			for i, v in pairs(objQueue) do
+				if v == false then
+					foundAllObj = false
+					break
+				end
+			end
+			
+			if foundAllObj then
+				fullyLoaded = true
+			end
+		until fullyLoaded == true
+		
+		--print(objQueue)
+		objQueue = nil
 	else
 		warn("DataTable does not exist!")
 	end

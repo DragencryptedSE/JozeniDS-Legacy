@@ -239,7 +239,7 @@ if not PresetPlayerData then
 end
 PresetPlayerData.Name = fileName
 
-function DataSerializer:GetStore(name, options)
+function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 	if not name then
 		name = ""
 	end
@@ -260,7 +260,7 @@ function DataSerializer:GetStore(name, options)
 		end
 
 		--functions
-		function DataStore:Get(plr, key, userids, dataOptions)
+		function DataStore:Get(plr: Player, key: string, userids: {any}?, dataOptions: DataStoreSetOptions?)
 			--check for loaded data
 			local PlayerData = nil
 			if plr:GetAttribute(loadedName) then
@@ -269,14 +269,14 @@ function DataSerializer:GetStore(name, options)
 				PlayerData = PresetPlayerData:Clone()
 				PlayerData.Name = fileName
 				PlayerData.Parent = plr
-
+				
 				for i, v in pairs(PlayerData:GetDescendants()) do
 					if v:IsA("ObjectValue") then
 						if v.Value then
 							--clone object
 							local newObject = v.Value:Clone()
 							newObject.Parent = DataTempFile
-	
+
 							--set new value
 							v.Value = newObject
 						end
@@ -332,12 +332,17 @@ function DataSerializer:GetStore(name, options)
 			else
 				print(plr.Name .. " loaded in offline mode.")
 			end
-
+			
 			plr:SetAttribute(loadedName, fileName)
 			return PlayerData, data, keyInfo
 		end
 		
-		function DataStore:Update(plr, key)
+		function DataStore:Update(plr: Player, key: string)
+			if not plr:GetAttribute(loadedName) then
+				print(plr.Name .. " tried to save while data is still deserializing. Did not overwrite save.")
+				return
+			end
+			
 			local GlobalDataStore = DataStore.GlobalDataStore
 			if GlobalDataStore and plr:GetAttribute(loadedName) and not plr:GetAttribute(isSavingName) then
 				plr:SetAttribute(isSavingName, true)
@@ -389,9 +394,8 @@ function DataSerializer:GetStore(name, options)
 		end
 
 		--the final save
-		function DataStore:CleanUpdate(plr, key)
-
-			local timeToRemove = retryCount * retryWait
+		function DataStore:CleanUpdate(plr: Player, key: string)
+			local timeToRemove = retryCount * retryWait + 2
 
 			if plr:GetAttribute(loadedName) then
 				local PlayerData = plr:FindFirstChild(fileName)
@@ -409,7 +413,7 @@ function DataSerializer:GetStore(name, options)
 		end
 		
 		--remove data
-		function DataStore:Remove(key)
+		function DataStore:Remove(key: string)
 			local GlobalDataStore = DataStore.GlobalDataStore
 			
 			for i = 0, retryCount do
@@ -441,7 +445,7 @@ function DataSerializer:GetStore(name, options)
 	return DataStore
 end
 
-function DataSerializer:ListStores()
+function DataSerializer:ListStores(): {}
 	local list = {}
 	
 	for i, v in pairs(DataSerializer.DataStores) do
@@ -453,7 +457,7 @@ function DataSerializer:ListStores()
 	return list
 end
 
-function DataSerializer:SetRetries(retries, cool)
+function DataSerializer:SetRetries(retries: number, cool: number)
 	--set retries
 	if retries and type(retries) == "number" then
 		if retries < 1 then

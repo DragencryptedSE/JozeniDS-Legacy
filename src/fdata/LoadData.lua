@@ -50,6 +50,8 @@ local function setAttributes(obj, val)
 					obj:SetAttribute(i, ColorSequence.new(sequence))
 				elseif v.dx then
 					obj:SetAttribute(i, Ray.new(Vector3.new(v.x, v.y, v.z), Vector3.new(v.dx, v.dy, v.dz)))
+				elseif v.Family then
+					obj:SetAttribute(i, Font.new(v.Family, Enum[v.Weight.EnumType][v.Weight.Name], Enum[v.Style.EnumType][v.Style.Name]))
 				end
 			end
 		end

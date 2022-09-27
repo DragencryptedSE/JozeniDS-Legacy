@@ -235,9 +235,9 @@ end
 local PresetPlayerData = ServerStorage:FindFirstChild("PresetPlayerData")
 if not PresetPlayerData then
 	PresetPlayerData = Instance.new("Folder")
+	PresetPlayerData.Name = "PresetPlayerData"
 	PresetPlayerData.Parent = ServerStorage
 end
-PresetPlayerData.Name = fileName
 
 function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 	if not name then

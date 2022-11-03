@@ -52,6 +52,8 @@ local function setAttributes(obj, val)
 					obj:SetAttribute(i, Ray.new(Vector3.new(v.x, v.y, v.z), Vector3.new(v.dx, v.dy, v.dz)))
 				elseif v.Family then
 					obj:SetAttribute(i, Font.new(v.Family, Enum[v.Weight.EnumType][v.Weight.Name], Enum[v.Style.EnumType][v.Style.Name]))
+				elseif v.R00 then
+					obj:SetAttribute(i, CFrame.new(v.x, v.y, v.z, v.R00, v.R01, v.R02, v.R10, v.R11, v.R12, v.R20, v.R21, v.R22))
 				end
 			end
 		end
@@ -427,7 +429,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 												end
 											end
 											if not surfaceAppearance then
-												warn("SurfaceAppearance: " .. newObj.Name .. " with: n\AlphaMode: " .. info.AlphaMode .. " n\ColorMap: " .. info.ColorMap .. " n\MetalnessMap: " .. info.MetalnessMap .. " n\NormalMap: " .. info.NormalMap .. " n\RoughnessMap: " .. info.RoughnessMap .. " n\has not been found in ServerStorage." )
+												warn("SurfaceAppearance: " .. newObj.Name .. " with: \nAlphaMode: " .. info.AlphaMode .. " \nColorMap: " .. info.ColorMap .. " \nMetalnessMap: " .. info.MetalnessMap .. " \nNormalMap: " .. info.NormalMap .. " \nRoughnessMap: " .. info.RoughnessMap .. " \nhas not been found in ServerStorage." )
 											end
 										elseif newObj:IsA("Accoutrement") then
 											newObj.AttachmentPoint = propTable(info.AttachmentPoint)

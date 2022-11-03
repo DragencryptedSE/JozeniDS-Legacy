@@ -105,6 +105,26 @@ local function saveAttributes(obj)
 						["Name"] = style[3];
 					};
 				};
+			elseif typeof(v) == "CFrame" then
+				local components = {v:components()}
+				for a, b in pairs(components) do
+					components[a] = sigFigs(b)
+				end
+
+				attributes[i] = {
+					["x"] = components[1] or 0;
+					["y"] = components[2] or 0;
+					["z"] = components[3] or 0;
+					["R00"] = components[4] or 1;
+					["R01"] = components[5] or 0;
+					["R02"] = components[6] or 0;
+					["R10"] = components[7] or 0;
+					["R11"] = components[8] or 1;
+					["R12"] = components[9] or 0;
+					["R20"] = components[10] or 0;
+					["R21"] = components[11] or 0;
+					["R22"] = components[12] or 1;
+				}
 			end
 		end
 	end

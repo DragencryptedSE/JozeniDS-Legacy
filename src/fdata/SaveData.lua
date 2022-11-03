@@ -125,6 +125,8 @@ local function saveAttributes(obj)
 					["R21"] = components[11] or 0;
 					["R22"] = components[12] or 1;
 				}
+			elseif typeof(v) == "Instance" then
+				attributes[i] = "obj" .. saveParts(v)
 			end
 		end
 	end
@@ -301,7 +303,7 @@ local function getProp(prop)
 	end
 	return Data
 end
-local function saveParts(Object, Data, num)
+function saveParts(Object, Data, num)
 	if Object then
 		local holdName = ""
 		if not Data then

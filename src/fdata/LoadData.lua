@@ -17,8 +17,22 @@ local function setAttributes(obj, val)
 	if val.Attributes then
 		local attributes = HttpService:JSONDecode(val.Attributes)
 		for i, v in pairs(attributes) do
-			if type(v) == "string" or type(v) == "number" or type(v) == "boolean" then
+			if type(v) == "number" or type(v) == "boolean" then
 				obj:SetAttribute(i, v)
+			elseif type(v) == "string" then
+				if v:match("^obj") then
+					local success, result = pcall(function()
+						return HttpService:JSONDecode(v:sub(3))
+					end)
+					if success then
+						obj:SetAttribute(DataSettings:Load(TempFile, TempFile, result))
+					else
+						-- warn(result)
+						obj:SetAttribute(i, v)
+					end
+				else
+					obj:SetAttribute(i, v)
+				end
 			elseif type(v) == "table" then
 				if v.MinX then
 					obj:SetAttribute(i, Rect.new(v.MinX, v.MinY, v.MaxX, v.MaxY))
@@ -227,7 +241,8 @@ end
 function DataSettings:Load(Player, DataFolder, DataTable)
 	if DataTable ~= nil then
 		local objQueue = {}
-		local function Scan(Object, Data)
+
+		local function Scan(Object, Data, objQueue)
 			if type(Data) == "table" then
 				for i, v in pairs(Data) do
 					local dataObject = Object:FindFirstChild(i)
@@ -1063,7 +1078,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 													newObj.ExtentsOffsetWorldSpace = propTable(info.ExtentsOffsetWorldSpace)
 													newObj.LightInfluence = info.LightInfluence
 													newObj.MaxDistance = info.MaxDistance
-													if info.PlayerToHideFrom then
+													if info.PlayerToHideFrom and Player:IsA("Player") then
 														newObj.PlayerToHideFrom = Player
 													end
 													newObj.Size = propTable(info.Size)
@@ -1369,7 +1384,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 				end
 			end
 		end
-		Scan(DataFolder, DataTable)
+		Scan(DataFolder, DataTable, objQueue)
 		
 		--check if objects fully loaded in
 		local fullyLoaded = false
@@ -1396,8 +1411,18 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 	else
 		warn("DataTable does not exist!")
 	end
-	DataFolder.Parent = Player
-	return DataFolder
+	if Player ~= DataFolder then -- Player Data
+		DataFolder.Parent = Player
+		return DataFolder
+	elseif Player == DataFolder then -- Instance attribute
+		local attrObjs = DataFolder:GetChildren()
+		if #attrObjs >= 1 then
+			return attrObjs[1]
+		end
+	else
+		warn("Unknown, failed to fetch data.")
+		return nil
+	end
 end
 
 return DataSettings

@@ -25,7 +25,7 @@ local function setAttributes(obj, val)
 						return HttpService:JSONDecode(v:sub(3))
 					end)
 					if success then
-						obj:SetAttribute(DataSettings:Load(TempFile, TempFile, result))
+						obj:SetAttribute(i, DataSettings:Load(TempFile, TempFile, result))
 					else
 						-- warn(result)
 						obj:SetAttribute(i, v)

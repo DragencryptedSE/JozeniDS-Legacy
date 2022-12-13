@@ -243,13 +243,13 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 	if not name then
 		name = ""
 	end
-	
+
 	local DataStore = DataSerializer.DataStores[name]
-	
+
 	if not DataStore then
 		DataSerializer.DataStores[name] = {}
 		DataStore = DataSerializer.DataStores[name]
-		
+
 		local success, DataStoreResult = pcall(function()
 			DataStore["GlobalDataStore"] = DataStoreService:GetDataStore(name, options)
 			return DataStore["GlobalDataStore"]
@@ -269,7 +269,7 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 				PlayerData = PresetPlayerData:Clone()
 				PlayerData.Name = fileName
 				PlayerData.Parent = plr
-				
+
 				for i, v in pairs(PlayerData:GetDescendants()) do
 					if v:IsA("ObjectValue") then
 						if v.Value then
@@ -287,9 +287,9 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 			local GlobalDataStore = DataStore.GlobalDataStore
 			local data = nil
 			local keyInfo = nil
-			
+
 			if GlobalDataStore then
-				
+
 				for i = 0, retryCount do
 					local success, DataResult, info = pcall(function()
 						--get data
@@ -310,7 +310,7 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 					if success then
 						data = DataResult
 						keyInfo = info
-						
+
 						LoadModule:Load(plr, PlayerData, DataResult)
 						print(plr.Name .. " loaded in the experience.")
 						break
@@ -332,17 +332,17 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 			else
 				print(plr.Name .. " loaded in offline mode.")
 			end
-			
+
 			plr:SetAttribute(loadedName, fileName)
 			return PlayerData, data, keyInfo
 		end
-		
+
 		function DataStore:Update(plr: Player, key: string)
 			if not plr:GetAttribute(loadedName) then
 				print(plr.Name .. " tried to save while data is still deserializing. Did not overwrite save.")
 				return
 			end
-			
+
 			local GlobalDataStore = DataStore.GlobalDataStore
 			if GlobalDataStore and plr:GetAttribute(loadedName) and not plr:GetAttribute(isSavingName) then
 				plr:SetAttribute(isSavingName, true)
@@ -387,7 +387,7 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 
 					task.wait(retryWait)
 				end
-				
+
 				--task.wait(6)
 				plr:SetAttribute(isSavingName, false)
 			end
@@ -411,11 +411,11 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 
 			DataStore:Update(plr, key)
 		end
-		
+
 		--remove data
 		function DataStore:Remove(key: string)
 			local GlobalDataStore = DataStore.GlobalDataStore
-			
+
 			for i = 0, retryCount do
 
 				--update data
@@ -441,19 +441,19 @@ function DataSerializer:GetStore(name: string?, options: DataStoreOptions?)
 			end
 		end
 	end
-	
+
 	return DataStore
 end
 
 function DataSerializer:ListStores(): {}
 	local list = {}
-	
+
 	for i, v in pairs(DataSerializer.DataStores) do
 		if v.GlobalDataStore then
 			list[i] = v.GlobalDataStore
 		end
 	end
-	
+
 	return list
 end
 
@@ -467,7 +467,7 @@ function DataSerializer:SetRetries(retries: number, cool: number)
 	else
 		retryCount = defaultRetry
 	end
-	
+
 	--set cooldown
 	if cool and type(cool) == "number" then
 		if cool < 1 then

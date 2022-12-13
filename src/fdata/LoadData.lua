@@ -1,7 +1,16 @@
 --[Made by Jozeni00]--
-local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 
+-- server
+local ServerStorage = game:GetService("ServerStorage")
+local PendingFile = ServerStorage:FindFirstChild("Loading_Data")
+if not PendingFile then
+	PendingFile = Instance.new("Folder")
+	PendingFile.Name = "Loading_Data"
+	PendingFile.Parent = ServerStorage
+end
+
+-- replicated
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TempFile = ReplicatedStorage:FindFirstChild("DataTempFile")
 if not TempFile then
@@ -226,22 +235,21 @@ local function setReference(newObj: Instance, parent: Instance, info: {any}, pro
 		--set reference
 		newObj[prop] = lastParent
 		queue[queueNum] = true
-		
+
 	end)
 
 	if info then
 		--queue for referenced objects loaded
 		local queueNum = #queue + 1
 		queue[queueNum] = false
-		
+
 		scanForReference(queueNum)
 	end
 end
 
 function DataSettings:Load(Player, DataFolder, DataTable)
+	local objQueue = {}
 	if DataTable ~= nil then
-		local objQueue = {}
-
 		local function Scan(Object, Data, objQueue)
 			if type(Data) == "table" then
 				for i, v in pairs(Data) do
@@ -361,12 +369,12 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 																newObj:Destroy()
 																newObj = v:Clone()
 																newObj:ClearAllChildren()
-																
+
 																--apply previous properties
 																newObj.Archivable = info.Archivable
 																newObj.Name = info.Name
 																setAttributes(newObj, info)
-																
+
 																--Appearance
 																newObj.CastShadow = info.CastShadow
 																newObj.Color = propTable(info.Color)
@@ -392,7 +400,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 																newObj.BackSurface = propTable(info.BackSurface)
 																newObj.LeftSurface = propTable(info.LeftSurface)
 																newObj.RightSurface = propTable(info.RightSurface)
-																
+
 																newObj.TextureID = info.TextureID
 																break
 															end
@@ -434,7 +442,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-														
+
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														newObj.Name = info.Name
@@ -863,11 +871,11 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-														
+
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														setAttributes(newObj, info)
-														
+
 														newObj.Disabled = info.Disabled
 														break
 													end
@@ -886,7 +894,7 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 														newObj:Destroy()
 														newObj = v:Clone()
 														newObj:ClearAllChildren()
-														
+
 														--apply previous properties
 														newObj.Archivable = info.Archivable
 														setAttributes(newObj, info)
@@ -1379,19 +1387,24 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 						dataObject.Value = BrickColor.new(v.r, v.g, v.b)
 						setAttributes(dataObject, v)
 					else
-						Scan(dataObject, v)
+						Scan(dataObject, v, objQueue)
 					end
 				end
 			end
 		end
 		Scan(DataFolder, DataTable, objQueue)
-		
-		--check if objects fully loaded in
-		local fullyLoaded = false
+
+	else
+		warn("DataTable does not exist!")
+	end
+
+	--check if objects fully loaded in
+	local fullyLoaded = false
+	local waitForLoad = coroutine.wrap(function()
 		--print(objQueue)
 		repeat
 			RunService.Heartbeat:Wait()
-			
+
 			--find any missing objs in queue
 			local foundAllObj = true
 			for i, v in pairs(objQueue) do
@@ -1400,19 +1413,29 @@ function DataSettings:Load(Player, DataFolder, DataTable)
 					break
 				end
 			end
-			
+
 			if foundAllObj then
 				fullyLoaded = true
 			end
 		until fullyLoaded == true
-		
+
 		--print(objQueue)
 		objQueue = nil
-	else
-		warn("DataTable does not exist!")
-	end
+
+		if Player:IsA("Player") then
+			DataFolder.Parent = Player
+		end
+	end)
+
+	waitForLoad()
+
+
 	if Player ~= DataFolder then -- Player Data
-		DataFolder.Parent = Player
+		if fullyLoaded then
+			DataFolder.Parent = Player
+		else
+			DataFolder.Parent = PendingFile
+		end
 		return DataFolder
 	elseif Player == DataFolder then -- Instance attribute
 		local attrObjs = DataFolder:GetChildren()

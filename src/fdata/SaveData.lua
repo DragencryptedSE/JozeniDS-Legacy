@@ -1,5 +1,4 @@
 --[Made by Jozeni00]--
-local ServerStorage = game:GetService("ServerStorage")
 local HttpService = game:GetService("HttpService")
 local DataSettings = {}
 local function sigFigs(num: number): number
